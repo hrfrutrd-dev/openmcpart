@@ -1,20 +1,27 @@
 # openmcpart - Universal Design Specialist MCP Server
-### どんなAgentでも使えるデザイン専門MCPサーバー
+### どんなAgentでも使えるデザイン専門MCPサーバー — AIっぽくない、洗練されたUI
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)](https://www.python.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Sophisticated](https://img.shields.io/badge/UI-Paper%20%26%20Ink%20No%20AI%20Tropes-black)](./web/)
 
 **Claude Desktop, Cursor, VS Code, ChatGPT, どんなMCP対応Agentでも使えるデザイン専門サーバー**
 
-プロのデザイナーが持つ知識を、AI Agentが使える13のツールとしてパッケージ化しました。
-カラー、タイポグラフィ、レイアウト、デザインシステム、アクセシビリティ、ブランディングまで。
+プロのデザイナーが持つ知識を、AI Agentが使える16のツールとしてパッケージ化。
+**AIっぽくない、洗練されたUI**のための2つの新ツールを含む: `generate_sophisticated_ui`, `critique_ai_look`
+
+> 紙とインク。0.5pxの線で区切る。紫グラデも、24px角丸も、影も、✨も使わない。
+
+- **Web Demo**: `web/index.html` - 洗練されたUIのライブデモ (Paper #fdfcfa / Ink #121212 / Hairline 0.5px / Radius 0px)
+- **Playground**: `web/playground.html` - 16ツールをブラウザで試す
 
 ---
 
 ## ✨ 特徴
 
 - **Universal**: MCP標準準拠 - 1回実装で全Agent対応
+- **Sophisticated**: AIっぽくない洗練UI - Paper & Ink, hairline, serif, 非対称, 160px余白
 - **Professional**: 8pt Grid, WCAG, 60-30-10ルールなどプロのベストプラクティス
 - **Practical**: CSS / Tailwind / Figmaでそのまま使えるコードを出力
 - **Japanese First**: 日本語フォント、日本語UXにも完全対応
@@ -22,7 +29,31 @@
 
 ---
 
-## 🛠️ 提供ツール (13 tools)
+## 🎨 AIっぽくない洗練されたUIとは？
+
+### AI定番 (避ける) → 洗練 (こちら)
+
+| AIっぽい (Generic) | 洗練された (Sophisticated) |
+|-------------------|---------------------------|
+| Purple → Blue gradient | 単色 + 紙の質感 #fdfcfa |
+| Rounded 24px everywhere | 0-4px, sharpが洗練 |
+| Shadow-lg, 浮かせる | Hairline 0.5pxで区切る |
+| Centered hero + blob | 左寄せ、右に大きく余白 |
+| 3-col icon grid | 1列 + 詳細、線で描く |
+| Inter only, no personality | Instrument Serif + Inter Tight |
+| ✨ Magic, Supercharge | 具体的な動詞: 組む、編む、削る |
+| Bouncy scale hover | Opacity 0.85, 150ms |
+| 詰め込み 80px余白 | 160-240px、余白を恐れない |
+
+**新ツール:**
+- `generate_sophisticated_ui` - AIっぽくないUI仕様生成 (Paper & Ink, Clay & Moss, Editorial Noir, Atelier)
+- `critique_ai_look` - AIっぽいデザインを検出し、洗練された代替案を提示 (Before/After)
+
+詳細: `web/` フォルダのデモサイトがそのままベストプラクティス。
+
+---
+
+## 🛠️ 提供ツール (16 tools)
 
 ### 🎨 Color カラー
 | Tool | 説明 |
@@ -61,6 +92,12 @@
 |------|------|
 | `extract_design_principles` | ブランドキーワードからアーキタイプ・原則・パレット抽出 |
 | `generate_moodboard_brief` | ムードボードブリーフ生成 (minimal, brutalism, glassmorphism, japanese等) |
+
+### ✨ Sophisticated UI — AIっぽくない洗練 (NEW)
+| Tool | 説明 |
+|------|------|
+| `generate_sophisticated_ui` | AIっぽくないUI仕様生成。Paper & Ink, Clay & Moss, Editorial Noir, Atelierの4 aesthetic。0px角丸、hairline、セリフ体、非対称、160px余白 |
+| `critique_ai_look` | AIっぽいデザインを批評。紫グラデ、24px角丸、影、✨等を検出し、Before/Afterで洗練された代替案を提示 |
 
 ### 📚 Resources & Prompts
 - `design://tokens/template` - トークンテンプレート

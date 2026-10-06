@@ -32,6 +32,8 @@ def test_tools_registered():
         "suggest_component_variants",
         "extract_design_principles",
         "generate_moodboard_brief",
+        "generate_sophisticated_ui",
+        "critique_ai_look",
     ]
     
     for name in expected:

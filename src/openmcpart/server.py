@@ -60,6 +60,10 @@ from .tools.branding import (
     tool_extract_design_principles,
     tool_generate_moodboard_brief,
 )
+from .tools.ui_generator import (
+    tool_generate_sophisticated_ui,
+    tool_critique_ai_look,
+)
 
 # Initialize FastMCP server
 mcp = FastMCP(
@@ -76,6 +80,9 @@ mcp = FastMCP(
     - デザインレビュー: ヒューリスティック評価、改善案
     - コンポーネント: ボタン、カード等のバリエーション
     - ブランディング: ブランドアーキタイプ、ムードボード
+    - 洗練UI: AIっぽくない、編集的、紙とインク、hairline、非対称、巨大余白
+    
+    重要: AIっぽいデザイン (紫グラデ、24px角丸、影、✨、中央揃え、3列アイコン) は避け、洗練された代替を提示してください。
     
     どんなAgentでも使えるように、出力は具体的で実装可能な形で提供してください。
     CSS, Tailwind, Figmaで使える形式を常に含めてください。
@@ -285,6 +292,31 @@ def generate_moodboard_brief(
     ムードボードのブリーフを生成。カラー、フォント、イメージ、テクスチャ、参考ブランド、Do's and Don'tsを含む。
     """
     return tool_generate_moodboard_brief(theme=theme, keywords=keywords)
+
+
+# ========== SOPHISTICATED UI TOOLS (AIっぽくない) ==========
+
+@mcp.tool()
+def generate_sophisticated_ui(
+    purpose: Annotated[str, Field(description="用途: landing page, dashboard, portfolio, editorial, ecommerce など")] = "landing page",
+    aesthetic: Annotated[str, Field(description="美的方向性: paper_ink, clay_moss, editorial, atelier")] = "paper_ink",
+    industry: Annotated[str, Field(description="業界 (任意)")] = "",
+    avoid_ai_tropes: Annotated[bool, Field(description="AIっぽい定番を避けるか")] = True,
+) -> dict:
+    """
+    AIっぽくない洗練されたUIの設計仕様を生成。紫グラデ、過剰な角丸、影、✨を避け、紙とインク、hairline、セリフ体、非対称、巨大な余白で洗練を表現。
+    """
+    return tool_generate_sophisticated_ui(purpose=purpose, aesthetic=aesthetic, industry=industry, avoid_ai_tropes=avoid_ai_tropes)
+
+
+@mcp.tool()
+def critique_ai_look(
+    design_description: Annotated[str, Field(description="批評したいデザインの説明。例: 紫グラデ背景に丸いカードが並ぶAIっぽいLP")],
+) -> dict:
+    """
+    AIっぽいデザインを批評し、洗練された代替案を提示。AI定番 (紫グラデ、24px角丸、影、中央揃え、✨) を検出し、具体的な修正方法を提案。
+    """
+    return tool_critique_ai_look(design_description=design_description)
 
 
 # ========== RESOURCES ==========

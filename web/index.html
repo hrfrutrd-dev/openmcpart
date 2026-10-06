@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>openmcpart — どんなAgentでも使えるデザインMCP</title>
+  <meta name="description" content="AIっぽくない、洗練されたデザイン専門MCPサーバー。紙とインク、hairline、セリフ体。Claude Desktop, Cursor, VS Code対応。">
+  <link rel="stylesheet" href="./css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◐</text></svg>">
+</head>
+<body class="grain">
+  <!-- Header - Minimal, hairline, no CTA -->
+  <header class="header container">
+    <a href="./index.html" class="logo">openmcpart</a>
+    <nav class="nav">
+      <a href="./index.html" class="active">Index</a>
+      <a href="./playground.html">Playground</a>
+      <a href="https://github.com/hrfrutrd-dev/openmcpart" target="_blank">GitHub — ↗</a>
+    </nav>
+  </header>
+
+  <!-- Hero - Asymmetrical, not centered, huge whitespace -->
+  <section class="hero container">
+    <div class="grid-12">
+      <div class="col-7">
+        <p class="mono" style="margin-bottom: 24px; color: var(--ink-faint);">MCP Server / 2026 / Design Tools</p>
+        <h1>紙とインク。<br>0.5pxの線で<br>区切る。</h1>
+        <p class="sub">
+          AIっぽい紫グラデも、24pxの角丸も、影も使わない。<br>
+          どんなAgentでも使える、洗練されたデザイン専門MCPサーバー。
+        </p>
+        <div class="cta">
+          <a href="./playground.html" class="btn btn-primary">Playgroundを開く —</a>
+          <span class="text-small" style="margin-left: 16px;">14 tools / 4 resources / 3 prompts</span>
+        </div>
+      </div>
+      <div class="col-5" style="display: flex; flex-direction: column; justify-content: flex-end;">
+        <div class="text-small" style="border-left: 0.5px solid var(--hairline); padding-left: 24px; margin-left: 32px;">
+          <p class="mono" style="margin-bottom: 12px;">Spec</p>
+          <p>Transport: stdio / sse / http<br>
+          Deps: mcp + pydantic only<br>
+          No API key / No network<br>
+          Works: Claude, Cursor, VS Code, any agent</p>
+          <p style="margin-top: 24px;" class="mono">Avoids</p>
+          <p>紫グラデ / 24px角丸 / 影 / ✨ / 中央揃え / 3列アイコン</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Manifesto - Single strong statement, not 3 features -->
+  <section class="manifesto container">
+    <div class="grid-12">
+      <div class="col-8">
+        <blockquote>
+          「AIが作ったように見えるデザインは、<br>もう飽きた。」
+        </blockquote>
+        <p class="text-small" style="margin-top: 32px; max-width: 480px;">
+          2023年から2025年、すべてのAIツールは同じに見えた。紫から青へのグラデーション、24pxの角丸、柔らかい影、中央揃えのヒーロー、3列のアイコン。openmcpartはその逆をいく。紙色の背景、0pxの角、hairline、セリフ体、左揃え、160pxの余白。
+        </p>
+      </div>
+      <div class="col-4">
+        <p class="mono" style="margin-bottom: 16px;">Principles</p>
+        <ul class="checklist">
+          <li>影を使わない — hairlineで区切る</li>
+          <li>角丸を0pxに — sharpが洗練</li>
+          <li>紫グラデを使わない — 単色 + 紙</li>
+          <li>中央揃えを避ける — 左揃え基本</li>
+          <li>余白を160pxに — 80pxでは詰まる</li>
+          <li>Interだけでない — セリフを1つ</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tools - Not 3-col grid, but 1-col with detail -->
+  <section class="section container">
+    <div class="grid-12" style="margin-bottom: 48px;">
+      <div class="col-5">
+        <p class="mono" style="color: var(--ink-faint); margin-bottom: 16px;">Tools — 16</p>
+        <h2>道具は<br>少なく、<br>切れ味を。</h2>
+      </div>
+      <div class="col-7">
+        <p class="text-small" style="max-width: 400px; margin-top: 8px;">
+          14のツール、4つのリソース、3つのプロンプト。外部APIなし。すべてローカルで計算。CSS/Tailwind/Figmaでそのまま使える出力を。
+        </p>
+      </div>
+    </div>
+
+    <div class="tool-list">
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">01 / Color</p>
+          <h3>generate_color_palette</h3>
+          <p class="text-small">ベースカラーまたはムードから調和の取れたパレット。complementary, analogous, triadic。CSS変数で出力。</p>
+        </div>
+        <div>
+          <div class="palette">
+            <div style="background: #fdfcfa; border-right: 0.5px solid #e8e3dc;"></div>
+            <div style="background: #121212;"></div>
+            <div style="background: #c45a3c;"></div>
+            <div style="background: #e8e3dc;"></div>
+            <div style="background: #f5f3ef;"></div>
+          </div>
+          <p class="mono" style="margin-top: 12px; font-size: 10px;">Paper #fdfcfa / Ink #121212 / Terracotta #c45a3c — No purple</p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">02 / Color</p>
+          <h3>check_color_contrast</h3>
+          <p class="text-small">WCAG AA/AAA判定 + 色覚多様性シミュレーション。アクセシビリティは洗練の条件。</p>
+        </div>
+        <div>
+          <p class="mono" style="font-size: 11px; line-height: 1.6;">
+            #ffffff on #121212 → 19.2:1 AAA Pass<br>
+            #fdfcfa on #c45a3c → 4.8:1 AA Pass<br>
+            Deutera / Protano / Tritano simulation included
+          </p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">03 / Typography</p>
+          <h3>suggest_typography_pairing</h3>
+          <p class="text-small">日本語対応。Instrument Serif + Inter Tight。セリフで脱AI。Google Fonts URL付き。</p>
+        </div>
+        <div>
+          <p style="font-family: var(--font-serif); font-size: 28px; line-height: 1;">Instrument Serif</p>
+          <p style="font-family: var(--font-sans); font-size: 14px; margin-top: 8px; color: var(--ink-light);">Inter Tight — 見出しはセリフ、本文はサンセリフ。ウェイトは400と500だけ。</p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">04 / Layout</p>
+          <h3>suggest_layout</h3>
+          <p class="text-small">SaaS, Dashboard, Blog等。12colだが非対称に。セクション間160px。8pt grid。</p>
+        </div>
+        <div>
+          <div style="display: grid; grid-template-columns: 5fr 7fr; gap: 8px; height: 64px;">
+            <div style="background: var(--ink);"></div>
+            <div style="border: 0.5px solid var(--hairline);"></div>
+          </div>
+          <p class="mono" style="margin-top: 8px; font-size: 10px;">Left 5col content / Right 7col whitespace — Asymmetrical</p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">05 / Tokens</p>
+          <h3>generate_design_tokens</h3>
+          <p class="text-small">完全なデザインシステム。Figma Tokens対応。CSS変数、Tailwind config出力。</p>
+        </div>
+        <div>
+          <div class="code" style="padding: 16px; font-size: 11px;">:root {
+  --paper: #fdfcfa;
+  --ink: #121212;
+  --hairline: 0.5px solid #e8e3dc;
+  --radius: 0px;
+}</div>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">06 / Sophisticated</p>
+          <h3>generate_sophisticated_ui</h3>
+          <p class="text-small"><span style="background: var(--ink); color: var(--paper); padding: 2px 6px; font-size: 10px;">NEW</span> AIっぽくないUI仕様生成。紫グラデ、24px角丸、影を避ける具体的なCSSを出力。</p>
+        </div>
+        <div>
+          <p class="mono" style="font-size: 11px; line-height: 1.6;">
+            Avoid: purple gradient, 24px radius, shadow-lg, ✨<br>
+            Instead: paper #fdfcfa, 0px radius, hairline, serif, 160px whitespace
+          </p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">07 / Critique</p>
+          <h3>critique_ai_look</h3>
+          <p class="text-small"><span style="background: var(--ink); color: var(--paper); padding: 2px 6px; font-size: 10px;">NEW</span> AIっぽいデザインを検出し、洗練された代替案を提示。Before/Afterで。</p>
+        </div>
+        <div>
+          <p class="text-small" style="text-decoration: line-through; color: var(--ink-faint);">紫グラデ + 丸いカード + 影 + 中央揃え + ✨</p>
+          <p class="text-small" style="margin-top: 4px;">紙色 + 0px角 + hairline + セリフ + 左揃え + 160px余白</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 48px; display: flex; gap: 16px;">
+      <a href="./playground.html" class="btn btn-primary">全16ツールを試す —</a>
+      <a href="https://github.com/hrfrutrd-dev/openmcpart" class="btn btn-secondary">GitHub</a>
+    </div>
+  </section>
+
+  <!-- Example - Show non-AI UI code -->
+  <section class="section container hairline-top" style="background: var(--paper-dark); margin: 0; max-width: none; padding: 96px 48px;">
+    <div class="container" style="padding: 0;">
+      <div class="grid-12">
+        <div class="col-5">
+          <p class="mono" style="margin-bottom: 16px;">Code Example — Non-AI Button</p>
+          <h2 style="font-size: 32px;">影も、<br>丸みも、<br>いらない。</h2>
+          <p class="text-small" style="margin-top: 24px; max-width: 320px;">
+            AIは「目立たせる = 影 + グラデ + 丸み」と学習した。洗練は逆。紙とインク、0.5pxの線、0pxの角。hoverはopacity 0.85だけ。scaleはしない。
+          </p>
+        </div>
+        <div class="col-7">
+          <div class="code" style="background: var(--paper);">/* AIっぽいボタン - 避ける */
+.button-ai {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.3);
+  transform: scale(1);
+  transition: all 0.3s bounce;
+}
+.button-ai:hover { transform: scale(1.05); }
+
+/* 洗練されたボタン - こちら */
+.button-refined {
+  background: #121212;
+  color: #fdfcfa;
+  border: 0.5px solid #121212;
+  border-radius: 0px;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: opacity 150ms ease-out;
+}
+.button-refined:hover { opacity: 0.85; }</div>
+          
+          <div style="margin-top: 24px; display: flex; gap: 12px;">
+            <button class="btn btn-primary">Primary — 44px / 0px / No Shadow</button>
+            <button class="btn btn-secondary">Secondary — Hairline</button>
+          </div>
+          <p class="mono" style="margin-top: 16px; font-size: 10px;">Height 44px / Radius 0 / Border 0.5px / Transition 150ms / No scale</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Setup - Minimal -->
+  <section class="section container">
+    <div class="grid-12">
+      <div class="col-5">
+        <h2>1分で<br>セットアップ</h2>
+        <p class="text-small" style="margin-top: 16px; max-width: 320px;">
+          stdio transport。1行の設定で全Agent対応。外部APIなし。
+        </p>
+      </div>
+      <div class="col-7">
+        <div class="code">{
+  "mcpServers": {
+    "openmcpart-design": {
+      "command": "openmcpart",
+      "args": []
+    }
+  }
+}</div>
+        <p class="mono" style="margin-top: 16px; font-size: 11px;">~/Library/Application Support/Claude/claude_desktop_config.json</p>
+        <div style="margin-top: 24px; display: flex; gap: 32px;" class="text-small">
+          <span>Claude Desktop ✓</span>
+          <span>Cursor ✓</span>
+          <span>VS Code ✓</span>
+          <span>Any Agent ✓</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer - Small, mono -->
+  <footer class="footer container">
+    <div class="grid-12">
+      <div class="col-5">
+        <p>openmcpart — Universal Design MCP Server</p>
+        <p style="margin-top: 8px;">紙とインク。0.5pxの線で区切る。AIっぽくない、洗練されたUIのためのMCP。</p>
+      </div>
+      <div class="col-7" style="display: flex; gap: 48px;">
+        <div>
+          <p class="mono" style="margin-bottom: 12px; color: var(--ink);">Links</p>
+          <p><a href="./playground.html">Playground</a><br>
+          <a href="https://github.com/hrfrutrd-dev/openmcpart">GitHub</a><br>
+          <a href="https://modelcontextprotocol.io">MCP Spec</a></p>
+        </div>
+        <div>
+          <p class="mono" style="margin-bottom: 12px; color: var(--ink);">Principles</p>
+          <p>Paper #fdfcfa<br>
+          Ink #121212<br>
+          Hairline 0.5px<br>
+          Radius 0px<br>
+          Whitespace 160px</p>
+        </div>
+        <div>
+          <p class="mono" style="margin-bottom: 12px; color: var(--ink);">Avoids</p>
+          <p>Purple gradient<br>
+          24px radius<br>
+          Shadow<br>
+          ✨ Magic<br>
+          Centered blob</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 48px; padding-top: 24px; border-top: 0.5px solid var(--hairline); display: flex; justify-content: space-between;">
+      <span>© 2026 openmcpart — MIT</span>
+      <span>Built with paper, ink, and 0.5px lines. No AI tropes.</span>
+    </div>
+  </footer>
+
+  <script src="./js/main.js"></script>
+</body>
+</html>
