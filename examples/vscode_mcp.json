@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "openmcpart-design": {
+      "type": "stdio",
+      "command": "openmcpart",
+      "args": []
+    }
+  }
+}

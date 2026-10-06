@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playground — openmcpart</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    /* Playground specific - still no radius, no shadow */
+    .playground-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 0;
+      border: 0.5px solid var(--hairline);
+      min-height: 80vh;
+    }
+    @media (max-width: 1024px) {
+      .playground-grid { grid-template-columns: 1fr; }
+    }
+    .playground-sidebar {
+      border-right: 0.5px solid var(--hairline);
+      background: var(--paper-dark);
+      padding: 32px;
+    }
+    .playground-main {
+      padding: 32px;
+      background: var(--paper);
+    }
+    .tool-nav {
+      list-style: none;
+    }
+    .tool-nav li {
+      padding: 12px 0;
+      border-bottom: 0.5px solid var(--hairline);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 150ms;
+    }
+    .tool-nav li:hover {
+      padding-left: 8px;
+      background: var(--paper);
+      margin: 0 -16px;
+      padding: 12px 16px;
+    }
+    .tool-nav li.active {
+      background: var(--ink);
+      color: var(--paper);
+      margin: 0 -16px;
+      padding: 12px 16px;
+    }
+    .tool-nav li.active .mono {
+      color: var(--paper);
+    }
+    .output {
+      background: var(--paper-dark);
+      border: 0.5px solid var(--hairline);
+      padding: 24px;
+      min-height: 400px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body class="grain">
+  <header class="header container">
+    <a href="./index.html" class="logo">openmcpart</a>
+    <nav class="nav">
+      <a href="./index.html">Index</a>
+      <a href="./playground.html" class="active">Playground</a>
+      <a href="https://github.com/hrfrutrd-dev/openmcpart" target="_blank">GitHub — ↗</a>
+    </nav>
+  </header>
+
+  <section class="section container" style="padding-bottom: 24px;">
+    <div class="grid-12">
+      <div class="col-5">
+        <p class="mono" style="color: var(--ink-faint); margin-bottom: 16px;">Playground — 16 Tools</p>
+        <h2 style="font-size: 40px;">触って、<br>確かめる。</h2>
+        <p class="text-small" style="margin-top: 16px; max-width: 320px;">
+          16のツールをブラウザで試す。MCPサーバーと同じロジックをJSで実装。AIっぽくないUIで。
+        </p>
+      </div>
+      <div class="col-7">
+        <div class="code" style="font-size: 11px;">// このPlaygroundはMCPサーバーのデモ
+// 実際はClaude Desktop等で自然言語で呼び出す
+// 例: 「#3b82f6ベースでパレット作って」→ generate_color_palette
+
+// ここではJSで同じ計算を再現
+// Paper #fdfcfa / Ink #121212 / No shadow / Radius 0</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container" style="padding-bottom: 96px;">
+    <div class="playground-grid">
+      <!-- Sidebar - Tool list -->
+      <div class="playground-sidebar">
+        <p class="mono" style="margin-bottom: 16px;">Select Tool</p>
+        <ul class="tool-nav" id="toolNav">
+          <li data-tool="sophisticated" class="active"><span>generate_sophisticated_ui</span> <span class="mono" style="font-size: 9px; background: var(--ink); color: var(--paper); padding: 2px 4px;">NEW</span></li>
+          <li data-tool="critique_ai"><span>critique_ai_look</span> <span class="mono" style="font-size: 9px; background: var(--ink); color: var(--paper); padding: 2px 4px;">NEW</span></li>
+          <li data-tool="palette"><span>generate_color_palette</span> <span class="mono">01</span></li>
+          <li data-tool="contrast"><span>check_color_contrast</span> <span class="mono">02</span></li>
+          <li data-tool="gradient"><span>generate_gradient</span> <span class="mono">03</span></li>
+          <li data-tool="typography"><span>suggest_typography_pairing</span> <span class="mono">04</span></li>
+          <li data-tool="type_scale"><span>generate_type_scale</span> <span class="mono">05</span></li>
+          <li data-tool="layout"><span>suggest_layout</span> <span class="mono">06</span></li>
+          <li data-tool="spacing"><span>generate_spacing_system</span> <span class="mono">07</span></li>
+          <li data-tool="tokens"><span>generate_design_tokens</span> <span class="mono">08</span></li>
+          <li data-tool="tailwind"><span>generate_tailwind_config</span> <span class="mono">09</span></li>
+          <li data-tool="a11y"><span>check_accessibility</span> <span class="mono">10</span></li>
+          <li data-tool="critique"><span>critique_design</span> <span class="mono">11</span></li>
+          <li data-tool="components"><span>suggest_component_variants</span> <span class="mono">12</span></li>
+          <li data-tool="branding"><span>extract_design_principles</span> <span class="mono">13</span></li>
+          <li data-tool="moodboard"><span>generate_moodboard_brief</span> <span class="mono">14</span></li>
+        </ul>
+
+        <div style="margin-top: 32px; padding-top: 24px; border-top: 0.5px solid var(--hairline);">
+          <p class="mono" style="margin-bottom: 12px;">Current Config</p>
+          <div id="configDisplay" class="text-small" style="font-size: 11px; line-height: 1.6;">
+            Aesthetic: paper_ink<br>
+            Purpose: landing page<br>
+            No purple, no 24px, no shadow
+          </div>
+        </div>
+      </div>
+
+      <!-- Main - Controls + Output -->
+      <div class="playground-main">
+        <!-- Controls -->
+        <div id="controls" class="playground-controls" style="margin-bottom: 24px;">
+          <!-- Dynamic controls will be injected here -->
+        </div>
+
+        <!-- Output -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <p class="mono">Output — CSS / Tailwind / Figma ready</p>
+          <button class="btn btn-tertiary" onclick="copyOutput()">Copy —</button>
+        </div>
+        <div id="output" class="output">Select a tool from the left.
+
+This playground demonstrates the sophisticated, non-AI UI.
+Paper #fdfcfa, Ink #121212, Hairline 0.5px, Radius 0px, Whitespace 160px.
+
+No purple gradients. No 24px radius. No shadows. No ✨.
+
+Try generate_sophisticated_ui — NEW tool for non-AI design.</div>
+
+        <!-- Visual Preview -->
+        <div id="visualPreview" style="margin-top: 24px; border: 0.5px solid var(--hairline); padding: 24px; background: var(--paper);">
+          <p class="mono" style="margin-bottom: 16px;">Visual Preview — Non-AI UI</p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn btn-primary">Primary — 0px / Hairline</button>
+            <button class="btn btn-secondary">Secondary</button>
+            <span style="display: inline-flex; align-items: center; font-size: 13px; border-bottom: 0.5px solid var(--ink); padding-bottom: 2px; cursor: pointer;">Tertiary — Underline</span>
+          </div>
+          <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="card">
+              <p class="mono" style="margin-bottom: 8px;">Card — No Shadow</p>
+              <p style="font-family: var(--font-serif); font-size: 20px;">紙とインク</p>
+              <p class="text-small" style="margin-top: 8px;">0.5px border, 0 radius, no shadow. Hover: border-color ink.</p>
+            </div>
+            <div style="background: var(--ink); color: var(--paper); padding: 24px; border: 0.5px solid var(--ink);">
+              <p class="mono" style="margin-bottom: 8px; color: var(--paper);">Card — Inverted</p>
+              <p style="font-family: var(--font-serif); font-size: 20px; color: var(--paper);">0.5pxの線</p>
+              <p style="font-size: 13px; margin-top: 8px; color: #a8a5a0;">背景はink、文字はpaper。最もコントラストが高く洗練。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer container">
+    <div style="display: flex; justify-content: space-between;">
+      <span>Playground — Local JS implementation of MCP tools</span>
+      <span><a href="./index.html">← Index</a> / Paper #fdfcfa / Ink #121212 / 0.5px hairline / 0px radius</span>
+    </div>
+  </footer>
+
+  <script src="./js/main.js"></script>
+</body>
+</html>

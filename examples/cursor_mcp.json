@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "openmcpart-design": {
+      "command": "openmcpart",
+      "args": [],
+      "env": {}
+    }
+  }
+}
