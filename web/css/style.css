@@ -52,7 +52,24 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-* { border-radius: 0 !important; } /* Enforce sharp */
+* { border-radius: 0 !important; } /* This stylesheet demonstrates the Paper & Ink profile. */
+
+.skip-link {
+  position: absolute;
+  z-index: 1000;
+  top: -80px;
+  left: 16px;
+  padding: 12px 16px;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.skip-link:focus { top: 16px; }
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
 
 html {
   font-size: 16px;
@@ -235,6 +252,8 @@ h3 {
 
 .input:focus {
   border-bottom-color: var(--ink);
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
 
 .input::placeholder {
@@ -495,4 +514,15 @@ h3 {
 ::selection {
   background: var(--ink);
   color: var(--paper);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

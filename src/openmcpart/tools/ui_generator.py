@@ -16,7 +16,11 @@ Instead:
 - Real content, not lorem ipsum
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any
+
+def _escape_single_quoted(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("'", "\\'")
+
 
 SOPHISTICATED_PALETTES = {
     "paper_ink": {
@@ -118,10 +122,10 @@ def tool_generate_sophisticated_ui(
     industry: str = "",
     avoid_ai_tropes: bool = True
 ) -> Dict[str, Any]:
-    """
-    AIっぽくない洗練されたUIの設計仕様を生成
-    """
-    palette = SOPHISTICATED_PALETTES.get(aesthetic, SOPHISTICATED_PALETTES["paper_ink"])
+    """Generate a selected style profile with configurable anti-cliché guidance."""
+    if aesthetic not in SOPHISTICATED_PALETTES:
+        return {"error": f"Unsupported aesthetic: {aesthetic}. Choose from {sorted(SOPHISTICATED_PALETTES)}"}
+    palette = SOPHISTICATED_PALETTES[aesthetic]
     
     # Select typography based on aesthetic
     if "japanese" in aesthetic or "japan" in purpose.lower():
@@ -190,18 +194,64 @@ def tool_generate_sophisticated_ui(
             "sophisticated": "紙とインク。0.5pxの線で区切る。"
         }
     }
-    
-    return {
-        "purpose": purpose,
-        "aesthetic": aesthetic,
-        "palette": palette,
-        "typography": typo,
-        "layout_principles": layout_principles,
-        "components": components,
-        "page_structure": structure,
-        "copy_guide": copy_guide,
-        "ai_tropes_to_avoid": AI_TROPES_TO_AVOID if avoid_ai_tropes else [],
-        "css_variables": f"""
+    checklist = [
+        "影を使っていないか？ → hairlineに",
+        "角丸が24pxになっていないか？ → 0-4pxに",
+        "紫→青グラデを使っていないか？ → 単色に",
+        "中央揃えばかりでないか？ → 左揃え基本に",
+        "余白が80pxで詰めていないか？ → 160pxに",
+        "Interだけでないか？ → セリフを1つ入れる",
+        "✨やMagicという言葉を使っていないか？ → 具体的な動詞に",
+        "3列アイコン並びでないか？ → 1列 + 詳細に",
+    ]
+
+    if not avoid_ai_tropes:
+        layout_principles = {
+            "grid": "コンテンツ量・ブランド・画面幅に合わせてグリッドを選びます。",
+            "whitespace": "情報密度と読みやすさを見ながら余白を調整します。",
+            "alignment": "中央揃え・左揃えなどをコンテンツの目的に合わせて選びます。",
+            "borders": "境界線、影、背景差などから階層に合う方法を選びます。",
+            "radius": "コンポーネントの役割と既存デザインシステムに合わせます。",
+            "density": "利用者のタスクと表示領域に合わせて情報量を決めます。",
+        }
+        components = {
+            "button": {
+                "primary": "主要タスクとコントラストに合わせ、サイズ・色・角丸を選ぶ",
+                "secondary": "主ボタンと明確に区別しつつ、同じシステムの状態を保つ",
+                "states": "hover・focus・disabledの表示を定義し、キーボードでも確認する",
+            },
+            "card": {
+                "style": "内容と階層に合わせて背景、境界線、角丸、影を選ぶ",
+                "hover": "操作可能なカードだけ状態変化を付け、フォーカス状態も定義する",
+            },
+            "input": {
+                "style": "ラベル・入力状態・エラーを明確にし、ブランドの部品ルールを適用する",
+                "avoid": "placeholderだけをラベル代わりにしない",
+            },
+        }
+        structure = [
+            {"section": "Page structure", "spec": "利用者の目的とコンテンツに合わせてセクション、階層、レスポンシブ挙動を設計する。"}
+        ]
+        copy_guide = {
+            "principle": "具体的で、利用者とブランドに合った表現を選ぶ。",
+            "review": "専門用語、曖昧な約束、行動を誤解させる表現がないか確認する。",
+        }
+        checklist = [
+            "ページの主目的と主要な利用者タスクを説明できるか？",
+            "色・タイポグラフィ・余白はブランドと読みやすさに合うか？",
+            "操作要素のfocus・hover・disabled状態を確認したか？",
+            "モバイル幅と拡大表示でレイアウトを確認したか？",
+            "必要な箇所をコントラスト計算と支援技術で確認したか？",
+        ]
+
+    selected_heading_font = _escape_single_quoted(typo["heading"].split(" / ")[0])
+    selected_body_font = _escape_single_quoted(typo["body"].split(" / ")[0])
+    selected_mono_font = _escape_single_quoted(typo["mono"].split(" / ")[0])
+    default_radius = "0px" if avoid_ai_tropes else "8px"
+    global_radius_rule = "* { border-radius: 0; }" if avoid_ai_tropes else "/* Set radius per component. */"
+    tailwind_radius = "NONE: '0', sm: '2px'" if avoid_ai_tropes else "DEFAULT: '0.5rem', sm: '0.25rem', lg: '0.75rem', full: '9999px'"
+    tailwind_shadows = "none: 'none'" if avoid_ai_tropes else "sm: '0 1px 2px rgba(0,0,0,0.05)', md: '0 4px 8px rgba(0,0,0,0.08)'"
+    css_variables = f"""
 :root {{
   --paper: {palette['colors'].get('paper', '#fdfcfa')};
   --paper-dark: {palette['colors'].get('paper_dark', palette['colors'].get('stone', '#f5f3ef'))};
@@ -209,19 +259,19 @@ def tool_generate_sophisticated_ui(
   --ink-light: {palette['colors'].get('ink_light', '#6b6b6b')};
   --hairline: {palette['colors'].get('hairline', '#e8e3dc')};
   --accent: {palette['colors'].get('accent', '#c45a3c')};
-  --font-serif: 'Instrument Serif', 'Newsreader', Georgia, serif;
-  --font-sans: 'Suisse Int\\'l', 'Inter Tight', system-ui, sans-serif;
-  --font-mono: 'Fragment Mono', 'IBM Plex Mono', monospace;
-  --radius-none: 0px;
-  --radius-sm: 2px;
-  --hairline: 0.5px solid var(--hairline);
+  --font-serif: '{selected_heading_font}', Georgia, serif;
+  --font-sans: '{selected_body_font}', system-ui, sans-serif;
+  --font-mono: '{selected_mono_font}', monospace;
+  --radius-default: {default_radius};
+  --radius-sm: {'0px' if avoid_ai_tropes else '4px'};
+  --border-hairline: 0.5px solid var(--hairline);
 }}
-* {{ border-radius: 0; }}
+{global_radius_rule}
 body {{ background: var(--paper); color: var(--ink); font-family: var(--font-sans); }}
 h1,h2 {{ font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.02em; line-height: 0.95; }}
-""",
-        "tailwind_config": f"""
-// tailwind.config.js - Sophisticated, non-AI
+"""
+    tailwind_config = f"""
+// tailwind.config.js — {aesthetic}
 module.exports = {{
   theme: {{
     extend: {{
@@ -232,79 +282,87 @@ module.exports = {{
         accent: '{palette['colors'].get('accent', '#c45a3c')}',
       }},
       fontFamily: {{
-        serif: ['Instrument Serif', 'Newsreader', 'serif'],
-        sans: ['Suisse Int\\'l', 'Inter Tight', 'sans-serif'],
-        mono: ['Fragment Mono', 'monospace'],
+        serif: ['{selected_heading_font}', 'serif'],
+        sans: ['{selected_body_font}', 'sans-serif'],
+        mono: ['{selected_mono_font}', 'monospace'],
       }},
-      borderRadius: {{ NONE: '0', sm: '2px' }}, // No 2xl
-      boxShadow: {{ none: 'none' }}, // No shadows
+      borderRadius: {{ {tailwind_radius} }},
+      boxShadow: {{ {tailwind_shadows} }},
     }}
   }}
 }}
-""",
-        "checklist": [
-            "影を使っていないか？ → hairlineに",
-            "角丸が24pxになっていないか？ → 0-4pxに",
-            "紫→青グラデを使っていないか？ → 単色に",
-            "中央揃えばかりでないか？ → 左揃え基本に",
-            "余白が80pxで詰めていないか？ → 160pxに",
-            "Interだけでないか？ → セリフを1つ入れる",
-            "✨やMagicという言葉を使っていないか？ → 具体的な動詞に",
-            "3列アイコン並びでないか？ → 1列 + 詳細に",
-        ]
+"""
+
+    return {
+        "purpose": purpose,
+        "aesthetic": aesthetic,
+        "palette": palette,
+        "typography": typo,
+        "layout_principles": layout_principles,
+        "components": components,
+        "page_structure": structure,
+        "copy_guide": copy_guide,
+        "ai_tropes_to_avoid": AI_TROPES_TO_AVOID if avoid_ai_tropes else [],
+        "css_variables": css_variables,
+        "tailwind_config": tailwind_config,
+        "checklist": checklist,
+        "industry": industry,
+        "industry_guidance": f"Consider {industry} conventions while validating choices with the target audience." if industry else "No industry-specific guidance requested.",
     }
 
 def tool_critique_ai_look(design_description: str) -> Dict[str, Any]:
-    """
-    AIっぽいデザインを批評し、洗練された代替案を提示
-    """
-    desc_lower = design_description.lower()
-    
-    detected_tropes = []
-    for trope in AI_TROPES_TO_AVOID:
-        # Simple keyword matching
-        if any(keyword in desc_lower for keyword in trope["trope"].lower().split()):
-            detected_tropes.append(trope)
-        # Check for common AI words
-        if "gradient" in desc_lower and "gradient" in trope["trope"].lower():
-            if trope not in detected_tropes:
-                detected_tropes.append(trope)
-        if "rounded" in desc_lower and "rounded" in trope["trope"].lower():
-            if trope not in detected_tropes:
-                detected_tropes.append(trope)
-    
-    # If no specific detection, give general critique
-    if not detected_tropes:
-        detected_tropes = AI_TROPES_TO_AVOID[:3]
-    
-    suggestions = []
-    for trope in detected_tropes:
-        suggestions.append({
+    """Flag explicitly described style patterns without treating taste as a defect."""
+    if not design_description or not design_description.strip():
+        return {"error": "design_description must not be empty"}
+
+    description = design_description.casefold()
+    trope_rules = [
+        (0, (("purple", "violet", "紫"), ("gradient", "グラデ"))),
+        (1, (("24px", "24 px", "rounded-2xl", "角丸24", "丸いカード", "rounded cards"),)),
+        (2, (("shadow", "box-shadow", "drop-shadow", "影"),)),
+        (3, (("✨", "sparkle", "magic", "magical", "supercharge"),)),
+        (4, (("centered hero", "centered blob", "center-aligned", "中央揃え", "中央寄せ", "中央配置"),)),
+        (5, (("3-col", "3 column", "3-column", "3列", "three-column"),)),
+        (6, (("inter only", "inter everywhere", "interだけ", "interのみ"),)),
+        (7, (("bouncy", "bounce", "scale-105", "scale hover"),)),
+        (8, (("neon", "high saturation", "高彩度", "ネオン"),)),
+    ]
+
+    detected_indices = set()
+    for index, groups in trope_rules:
+        if all(any(trigger in description for trigger in group) for group in groups):
+            detected_indices.add(index)
+
+    detected_tropes = [AI_TROPES_TO_AVOID[index] for index in sorted(detected_indices)]
+    suggestions = [
+        {
             "issue": trope["trope"],
             "why_ai": trope["why"],
             "fix": trope["instead"],
-            "severity": "高" if "gradient" in trope["trope"].lower() or "rounded" in trope["trope"].lower() else "中"
-        })
-    
+            "priority": "optional_style_change",
+            "confidence": "keyword_heuristic",
+            "note": "美的な選択肢であり、アクセシビリティ上の不具合や普遍的な品質問題とは限りません。",
+        }
+        for trope in detected_tropes
+    ]
+    quick_fixes = [item["fix"] for item in suggestions]
+    if not detected_tropes:
+        quick_fixes = []
+
     return {
         "input": design_description,
+        "analysis_type": "keyword_heuristic",
         "detected_ai_tropes": detected_tropes,
         "suggestions": suggestions,
+        "aesthetic_note": "美的な選択肢であり、アクセシビリティ上の不具合や普遍的な品質問題とは限りません。ブランドやユーザーの目的に合っていれば、そのまま採用して問題ありません。",
         "sophisticated_alternative": {
+            "profile": "paper_ink",
             "palette": SOPHISTICATED_PALETTES["paper_ink"],
             "typography": SOPHISTICATED_TYPOGRAPHY["editorial"],
-            "quick_fixes": [
-                "背景を #fdfcfa (紙色) に",
-                "角丸を 0px に",
-                "影を消して 0.5px border に",
-                "見出しをセリフ体 (Instrument Serif) に",
-                "セクション間を 160px に",
-                "CTAを1つに減らし、左に寄せる",
-                "中央揃えを左揃えに",
-            ]
+            "quick_fixes": quick_fixes,
         },
         "before_after": {
-            "before": "紫グラデ背景 + 丸いカード + 影 + Inter + 中央揃え + ✨",
-            "after": "紙色背景 + 0px角 + hairline + セリフ見出し + 左揃え + 160px余白"
-        }
+            "before": design_description,
+            "after": "Paper & Inkは一例です。用途・ブランドに合わせて色、角丸、影、配置を選び直してください。",
+        },
     }

@@ -1,124 +1,76 @@
-"""
-Example client for openmcpart design MCP server
-どんなAgentでも使えることを示すクライアント例
-
-This example shows how ANY agent can use this MCP server.
-"""
+"""Connect to openmcpart with the official Python MCP client session API."""
 
 import asyncio
-from mcp import Client
-from mcp.client.stdio import StdioServerParameters
+import json
+from typing import Any
 
-async def example_stdio():
-    """Example using stdio transport (most common)"""
-    print("=== stdio transport example ===")
-    
-    # For Claude Desktop, Cursor, etc., you don't need to write client code
-    # Just configure the MCP server in config file.
-    # This is for custom agents that want to call the server programmatically.
-    
-    server_params = StdioServerParameters(
-        command="openmcpart",
-        args=[],
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+
+
+async def example_stdio() -> None:
+    """Launch the server over stdio, list tools, and call one tool."""
+    server_params = StdioServerParameters(command="openmcpart", args=[])
+    async with stdio_client(server_params) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+            tools = await session.list_tools()
+            print(f"Connected. Server exposes {len(tools.tools)} tools.")
+
+            result = await session.call_tool(
+                "generate_color_palette",
+                {"mood": "calm", "harmony": "analogous", "count": 5},
+            )
+            for item in result.content:
+                if getattr(item, "text", None):
+                    print(item.text)
+
+
+async def example_direct() -> None:
+    """Call the in-process MCP server object for a lightweight smoke test."""
+    from openmcpart.server import mcp
+
+    result = await mcp.call_tool("check_color_contrast", {"foreground": "#ffffff", "background": "#000000"})
+    print("Direct in-process call:")
+    print(_result_text(result))
+
+
+async def example_workflow() -> None:
+    """Run a small design-token workflow without an external AI service."""
+    from openmcpart.server import mcp
+
+    print("\n=== Design token workflow ===")
+    brand = await mcp.call_tool(
+        "extract_design_principles",
+        {"brand_keywords": "信頼,革新,シンプル", "industry": "SaaS"},
     )
-    
-    # This would be used like:
-    # async with Client(server_params) as client:
-    #     result = await client.call_tool("generate_color_palette", {"mood": "calm"})
-    #     print(result)
-    
-    print("Configure in your MCP client config:")
-    print("""
-{
-  "mcpServers": {
-    "openmcpart-design": {
-      "command": "openmcpart",
-      "args": []
-    }
-  }
-}
-    """)
+    print("Brand direction:", _result_text(brand)[:400])
 
-async def example_direct():
-    """Direct usage without MCP transport (for testing)"""
-    print("\n=== Direct tool usage (no transport) ===")
-    
-    from openmcpart.server import mcp
-    
-    # Call tools directly
-    tools_to_try = [
-        ("generate_color_palette", {"mood": "calm", "harmony": "analogous"}),
-        ("check_color_contrast", {"foreground": "#ffffff", "background": "#3b82f6"}),
-        ("suggest_typography_pairing", {"mood": "tech_trust", "language": "ja"}),
-        ("generate_design_tokens", {"primary_color": "#6366f1", "brand_name": "DemoBrand"}),
-    ]
-    
-    for tool_name, args in tools_to_try:
-        print(f"\n--- {tool_name}({args}) ---")
-        result = await mcp.call_tool(tool_name, args)
-        # result is CallToolResult with content
-        if hasattr(result, 'content') and result.content:
-            text = result.content[0].text
-            # Truncate for display
-            print(text[:600] + "..." if len(text) > 600 else text)
-        else:
-            print(result)
+    tokens = await mcp.call_tool(
+        "generate_design_tokens",
+        {"primary_color": "#3b82f6", "brand_name": "MySaaS"},
+    )
+    try:
+        data: Any = json.loads(_result_text(tokens))
+        print("CSS variables:")
+        print(data["css_variables"])
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        print(f"Could not display token output: {exc}")
 
-async def example_workflow():
-    """Full workflow: branding -> colors -> typography -> tokens -> layout"""
-    print("\n=== Full Design Workflow Example ===")
-    
-    from openmcpart.server import mcp
-    
-    # 1. Branding
-    print("\n1. ブランディング分析...")
-    r1 = await mcp.call_tool("extract_design_principles", {
-        "brand_keywords": "信頼,革新,シンプル",
-        "industry": "SaaS",
-        "audience": "スタートアップ"
-    })
-    print(r1.content[0].text[:500])
-    
-    # 2. Color
-    print("\n2. カラーパレット生成...")
-    r2 = await mcp.call_tool("generate_color_palette", {
-        "mood": "tech",
-        "harmony": "analogous"
-    })
-    print(r2.content[0].text[:500])
-    
-    # 3. Typography
-    print("\n3. タイポグラフィ...")
-    r3 = await mcp.call_tool("suggest_typography_pairing", {
-        "mood": "tech_trust",
-        "industry": "saas",
-        "language": "en"
-    })
-    print(r3.content[0].text[:500])
-    
-    # 4. Tokens
-    print("\n4. デザイントークン...")
-    r4 = await mcp.call_tool("generate_design_tokens", {
-        "primary_color": "#3b82f6",
-        "brand_name": "MySaaS"
-    })
-    text = r4.content[0].text
-    # Parse JSON to get css_variables
-    import json
-    data = json.loads(text)
-    print("CSS Variables:")
-    print(data["css_variables"][:500])
-    
-    # 5. Layout
-    print("\n5. レイアウト提案...")
-    r5 = await mcp.call_tool("suggest_layout", {
-        "content_type": "landing_saas",
-        "target": "desktop",
-        "style": "minimal"
-    })
-    print(r5.content[0].text[:500])
+
+def _result_text(result: Any) -> str:
+    content = getattr(result, "content", [])
+    text_parts = [item.text for item in content if getattr(item, "text", None)]
+    if text_parts:
+        return "\n".join(text_parts)
+    return str(result)
+
+
+async def main() -> None:
+    await example_stdio()
+    await example_direct()
+    await example_workflow()
+
 
 if __name__ == "__main__":
-    asyncio.run(example_stdio())
-    asyncio.run(example_direct())
-    asyncio.run(example_workflow())
+    asyncio.run(main())

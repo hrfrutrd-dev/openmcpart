@@ -1,7 +1,7 @@
 """
 Branding and design principles tools
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 BRAND_ARCHETYPES = {
     "innocent": {"keywords": ["純粋", "正直", "楽観", "シンプル"], "colors": ["#fef3c7", "#fde68a", "#ffffff"], "fonts": "丸みのあるサンセリフ", "imagery": "明るく、清潔、自然光"},
@@ -163,7 +163,8 @@ def tool_generate_moodboard_brief(theme: str, keywords: str = "") -> Dict[str, A
     if not matched:
         matched = "minimal"
     
-    data = moods[matched]
+    data = dict(moods[matched])
+    data["colors"] = list(data["colors"])
     data["theme"] = matched
     data["requested_theme"] = theme
     data["keywords"] = keywords

@@ -1,91 +1,99 @@
 # Architecture
 
-## 概要
+## Overview
 
-openmcpartは、MCP (Model Context Protocol) 標準に準拠したデザイン専門サーバーです。
-FastMCP (Python SDK) を使用して実装されています。
+`openmcpart` is a Python MCP server for design-system generation and review. It also includes a read-only local CLI for static HTML/CSS project inspection. The MCP server has **18 tools, 4 resources, and 3 prompts**.
 
-## 構成
+## Package layout
 
-```
-openmcpart/
-├── src/openmcpart/
-│   ├── __init__.py
-│   ├── server.py          # FastMCPインスタンス、13 tools, 4 resources, 3 prompts
-│   ├── tools/
-│   │   ├── __init__.py
-│   │   ├── colors.py      # generate_color_palette, check_color_contrast, generate_gradient
-│   │   ├── typography.py  # suggest_typography_pairing, generate_type_scale
-│   │   ├── layout.py      # suggest_layout, generate_spacing_system
-│   │   ├── tokens.py      # generate_design_tokens, generate_tailwind_config
-│   │   ├── accessibility.py # check_accessibility, critique_design, suggest_component_variants
-│   │   └── branding.py    # extract_design_principles, generate_moodboard_brief
-│   └── utils/
-│       ├── __init__.py
-│       └── color_utils.py # 色変換、コントラスト、調和、色覚シミュレーション
+```text
+src/openmcpart/
+├── server.py                 # MCP registration, transports, audit/tokens CLI
+├── tools/
+│   ├── accessibility.py      # Accessibility checklist, heuristic critique, components
+│   ├── branding.py           # Brand principles and moodboard brief
+│   ├── colors.py             # Palette, contrast and gradient helpers
+│   ├── layout.py              # Layout and spacing suggestions
+│   ├── project_audit.py      # Read-only HTML/CSS audit and token extraction
+│   ├── tokens.py              # CSS, Tailwind, JSON and DTCG-style token output
+│   ├── typography.py          # Font pairing and type scales
+│   └── ui_generator.py        # Optional Paper & Ink / editorial aesthetics
+└── utils/
+    └── color_utils.py         # Color conversion, WCAG contrast and color-blind simulation
 ```
 
-## Transport
+## MCP surface
 
-- **stdio**: デフォルト、全MCPクライアント対応
-- 将来的にSSE/HTTPも対応可能 (FastMCPがサポート)
+### 18 tools
 
-## Tool設計原則
+- **Color:** `generate_color_palette`, `check_color_contrast`, `generate_gradient`
+- **Typography:** `suggest_typography_pairing`, `generate_type_scale`
+- **Layout:** `suggest_layout`, `generate_spacing_system`
+- **Design tokens:** `generate_design_tokens`, `generate_tailwind_config`, `extract_project_tokens`
+- **Accessibility and review:** `check_accessibility`, `critique_design`, `suggest_component_variants`, `audit_project`
+- **Branding:** `extract_design_principles`, `generate_moodboard_brief`
+- **Style direction:** `generate_sophisticated_ui`, `critique_ai_look`
 
-1. **入力はシンプルに**: 必須パラメータ最小限、オプションで詳細化
-2. **出力は実装可能に**: CSS, Tailwind, Figmaで使える形式を必ず含む
-3. **日本語対応**: フォント、ブランディングで日本語を考慮
-4. **アクセシビリティ内蔵**: コントラスト、色覚多様性を常に含める
-5. **外部依存なし**: 計算はローカルで完結、APIキー不要
+### Resources and prompts
 
-## 依存関係
+- Resources: `design://tokens/template`, `design://guidelines/8pt-grid`, `design://guidelines/wcag`, `design://checklist/design-review`
+- Prompts: `design_critique_prompt`, `branding_workshop_prompt`, `component_design_prompt`
 
-- `mcp>=1.20.0` - MCP Python SDK
-- `pydantic>=2.0.0` - バリデーション
+## Transports and CLI
 
-のみ。軽量。
+- **stdio** is the default for MCP clients.
+- **SSE** and **streamable HTTP** can be selected with `--transport` or `MCP_TRANSPORT`; HTTP binds to loopback by default (`127.0.0.1`). Set `MCP_HOST=0.0.0.0` only when a container or trusted network boundary requires it.
+- `openmcpart audit <directory>` prints a static audit report.
+- `openmcpart tokens <directory>` extracts local CSS token candidates.
+- Both CLI commands support `--format markdown|json` and `--max-files`.
+- `audit` also supports `--fail-on none|low|medium|high|critical` for CI.
+- The root `action.yml` defines a composite GitHub Action; its default threshold is `high`, and it writes a Markdown report to the step summary and exposes its path as `report`.
 
-## 拡張方法
+Example workflow step inside this repository:
 
-新しいツールを追加する場合:
-
-1. `src/openmcpart/tools/` に新しいモジュール作成
-2. 関数を定義 (型ヒントとdocstring必須)
-3. `tools/__init__.py` でエクスポート
-4. `server.py` で `@mcp.tool()` デコレータで登録
-
-例:
-
-```python
-# tools/my_new_tool.py
-def tool_my_new_feature(param: str) -> dict:
-    return {"result": "..."}
-
-# server.py
-from .tools.my_new_tool import tool_my_new_feature
-
-@mcp.tool()
-def my_new_feature(param: Annotated[str, Field(description="...")]) -> dict:
-    \"\"\"説明\"\"\"
-    return tool_my_new_feature(param)
+```yaml
+- uses: ./
+  with:
+    project-path: .
+    fail-on: high
 ```
 
-## テスト
+The Composite Action definition is covered by static review but has not yet been exercised on GitHub-hosted runners.
 
-- `pytest` でユニットテスト
-- `npx @modelcontextprotocol/inspector openmcpart` でMCP Inspectorテスト
-- 各ツールの入出力をJSON Schemaで検証
+## Project audit safety and scope
 
-## セキュリティ
+`audit_project` and `extract_project_tokens` require a path argument from MCP callers; the CLI defaults to the current directory only when explicitly invoked without a path. The scanner:
 
-- 外部API呼び出しなし
-- ファイルシステムアクセスなし (resourcesはメモリ内のテンプレートのみ)
-- 入力はPydanticでバリデーション
-- 色コードは正規表現でサニタイズ
+- reads supported text files only; it does not execute project code;
+- makes no network requests and never writes to the scanned project;
+- does not follow symlinks;
+- skips hidden/generated/dependency directories and files larger than 1 MB;
+- reads at most 20 MB total per scan;
+- defaults to a 500-file limit (up to 5,000 can be requested);
+- returns relative source locations and heuristic findings.
 
-## パフォーマンス
+Markup semantics are parsed from `.html` and `.htm`; CSS is read from `.css` and `<style>` blocks in `.vue` / `.svelte` files. Checks cover missing document language and title, image alt attributes, names for buttons and links (including linked image alt text), form labels, duplicate IDs, skipped heading levels, missing `aria-labelledby` references, some same-rule CSS contrast pairs, removed focus outlines, and motion preferences. Token extraction reports CSS custom properties, repeated colors, font families, spacing values, radii, and shadows. Returned custom properties are capped at 500, color tokens at 200, and individual token values at 500 characters; truncation is reported in the JSON result.
 
-- すべての計算はO(1)〜O(n)で軽量
-- 色変換、コントラスト計算は数ms
-- パレット生成も10色程度で即時
-- メモリ使用量 < 50MB
+This is **not** a browser renderer, a screen-reader test, or a WCAG conformance certificate. CSS inheritance, runtime-generated markup, opacity, images behind text, layout geometry, and many framework-specific patterns require browser or manual verification. Reports explicitly include these limitations.
+
+## Design principles
+
+1. Keep the core deterministic and local; no external AI API key is required.
+2. Keep file inspection read-only and opt-in through an explicit project path.
+3. Distinguish measured values from heuristic suggestions and manual checks.
+4. Prefer outputs that developers can review and adapt; do not imply that a style preference is a universal quality rule.
+5. Keep MCP tool schemas small, typed, and independently testable.
+
+## Dependencies
+
+Runtime dependencies are `mcp` and `pydantic`. The project audit uses Python's standard library. Development dependencies are available through `pip install -e '.[dev]'`.
+
+## Testing and linting
+
+```bash
+pip install -e '.[dev]'
+ruff check src tests
+pytest -q
+```
+
+CI runs the lint, tests, package installation, and local audit CLI on Python 3.10–3.13.

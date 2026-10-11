@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>openmcpart — どんなAgentでも使えるデザインMCP</title>
-  <meta name="description" content="AIっぽくない、洗練されたデザイン専門MCPサーバー。紙とインク、hairline、セリフ体。Claude Desktop, Cursor, VS Code対応。">
+  <title>openmcpart — デザイン支援MCPとローカルUI監査</title>
+  <meta name="description" content="デザイン提案、デザイントークン、ローカルHTML/CSSの静的監査を提供するオープンソースMCPサーバー。">
   <link rel="stylesheet" href="./css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◐</text></svg>">
 </head>
@@ -12,12 +12,14 @@
   <!-- Header - Minimal, hairline, no CTA -->
   <header class="header container">
     <a href="./index.html" class="logo">openmcpart</a>
-    <nav class="nav">
-      <a href="./index.html" class="active">Index</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="./index.html" class="active" aria-current="page">Index</a>
       <a href="./playground.html">Playground</a>
-      <a href="https://github.com/hrfrutrd-dev/openmcpart" target="_blank">GitHub — ↗</a>
+      <a href="https://github.com/hrfrutrd-dev/openmcpart" target="_blank" rel="noopener noreferrer">GitHub — ↗</a>
     </nav>
   </header>
+  <a class="skip-link" href="#main-content">本文へスキップ</a>
+  <main id="main-content">
 
   <!-- Hero - Asymmetrical, not centered, huge whitespace -->
   <section class="hero container">
@@ -26,23 +28,23 @@
         <p class="mono" style="margin-bottom: 24px; color: var(--ink-faint);">MCP Server / 2026 / Design Tools</p>
         <h1>紙とインク。<br>0.5pxの線で<br>区切る。</h1>
         <p class="sub">
-          AIっぽい紫グラデも、24pxの角丸も、影も使わない。<br>
-          どんなAgentでも使える、洗練されたデザイン専門MCPサーバー。
+          Paper &amp; Inkは、選べるデザイン方向のひとつ。<br>
+          デザイン提案からローカルHTML/CSSの静的監査まで支援するMCPサーバー。
         </p>
         <div class="cta">
-          <a href="./playground.html" class="btn btn-primary">Playgroundを開く —</a>
-          <span class="text-small" style="margin-left: 16px;">14 tools / 4 resources / 3 prompts</span>
+          <a href="./playground.html" class="btn btn-primary">Playgroundの例を試す —</a>
+          <span class="text-small" style="margin-left: 16px;">18 tools / 4 resources / 3 prompts</span>
         </div>
       </div>
       <div class="col-5" style="display: flex; flex-direction: column; justify-content: flex-end;">
         <div class="text-small" style="border-left: 0.5px solid var(--hairline); padding-left: 24px; margin-left: 32px;">
           <p class="mono" style="margin-bottom: 12px;">Spec</p>
-          <p>Transport: stdio / sse / http<br>
-          Deps: mcp + pydantic only<br>
-          No API key / No network<br>
-          Works: Claude, Cursor, VS Code, any agent</p>
-          <p style="margin-top: 24px;" class="mono">Avoids</p>
-          <p>紫グラデ / 24px角丸 / 影 / ✨ / 中央揃え / 3列アイコン</p>
+          <p>Transport: stdio / sse / streamable-http<br>
+          Deps: mcp + pydantic<br>
+          No external AI API key<br>
+          Local audit: read-only</p>
+          <p style="margin-top: 24px;" class="mono">Style profile</p>
+          <p>Paper &amp; Inkは選択可能な美的方向。ルールは用途とブランドに合わせる。</p>
         </div>
       </div>
     </div>
@@ -53,21 +55,21 @@
     <div class="grid-12">
       <div class="col-8">
         <blockquote>
-          「AIが作ったように見えるデザインは、<br>もう飽きた。」
+          「提案で終わらず、<br>根拠と差分へ。」
         </blockquote>
         <p class="text-small" style="margin-top: 32px; max-width: 480px;">
-          2023年から2025年、すべてのAIツールは同じに見えた。紫から青へのグラデーション、24pxの角丸、柔らかい影、中央揃えのヒーロー、3列のアイコン。openmcpartはその逆をいく。紙色の背景、0pxの角、hairline、セリフ体、左揃え、160pxの余白。
+          Paper &amp; Inkはopenmcpartの出発点であり、すべてのブランドに強制するルールではない。18のMCPツールによる提案に加え、ローカルHTML/CSSの静的監査では問題候補とソース位置を示す。ファイルは読み取り専用で、結果はブラウザや支援技術でも確認する。
         </p>
       </div>
       <div class="col-4">
         <p class="mono" style="margin-bottom: 16px;">Principles</p>
         <ul class="checklist">
-          <li>影を使わない — hairlineで区切る</li>
-          <li>角丸を0pxに — sharpが洗練</li>
-          <li>紫グラデを使わない — 単色 + 紙</li>
-          <li>中央揃えを避ける — 左揃え基本</li>
-          <li>余白を160pxに — 80pxでは詰まる</li>
-          <li>Interだけでない — セリフを1つ</li>
+          <li>ユーザーが選んだブランド方向を尊重</li>
+          <li>監査結果に根拠とソース位置を付ける</li>
+          <li>自動チェックと手動確認を分ける</li>
+          <li>ローカル監査は読み取り専用</li>
+          <li>スタイルの好みを普遍的な不具合と呼ばない</li>
+          <li>提案を実装・検証につなげる</li>
         </ul>
       </div>
     </div>
@@ -77,12 +79,12 @@
   <section class="section container">
     <div class="grid-12" style="margin-bottom: 48px;">
       <div class="col-5">
-        <p class="mono" style="color: var(--ink-faint); margin-bottom: 16px;">Tools — 16</p>
+        <p class="mono" style="color: var(--ink-faint); margin-bottom: 16px;">18 MCP Tools — Highlights</p>
         <h2>道具は<br>少なく、<br>切れ味を。</h2>
       </div>
       <div class="col-7">
         <p class="text-small" style="max-width: 400px; margin-top: 8px;">
-          14のツール、4つのリソース、3つのプロンプト。外部APIなし。すべてローカルで計算。CSS/Tailwind/Figmaでそのまま使える出力を。
+          18のMCPツール、4つのリソース、3つのプロンプト。ローカルHTML/CSS監査とトークン抽出を追加。コードは実行せず、結果は候補として確認できます。
         </p>
       </div>
     </div>
@@ -152,7 +154,7 @@
         <div>
           <p class="tool-name">05 / Tokens</p>
           <h3>generate_design_tokens</h3>
-          <p class="text-small">完全なデザインシステム。Figma Tokens対応。CSS変数、Tailwind config出力。</p>
+          <p class="text-small">色・タイポグラフィ・余白・角丸などの基本トークンを生成。CSS変数、Tailwind config、JSON、DTCG-style JSONを出力。Figmaプラグインとの互換性は利用先で確認してください。</p>
         </div>
         <div>
           <div class="code" style="padding: 16px; font-size: 11px;">:root {
@@ -180,20 +182,42 @@
 
       <div class="tool-item">
         <div>
-          <p class="tool-name">07 / Critique</p>
+          <p class="tool-name">07 / Style profile</p>
           <h3>critique_ai_look</h3>
-          <p class="text-small"><span style="background: var(--ink); color: var(--paper); padding: 2px 6px; font-size: 10px;">NEW</span> AIっぽいデザインを検出し、洗練された代替案を提示。Before/Afterで。</p>
+          <p class="text-small">説明文に書かれたパターンだけをヒューリスティックに検出。美的好みは不具合と決めつけない。</p>
         </div>
         <div>
-          <p class="text-small" style="text-decoration: line-through; color: var(--ink-faint);">紫グラデ + 丸いカード + 影 + 中央揃え + ✨</p>
-          <p class="text-small" style="margin-top: 4px;">紙色 + 0px角 + hairline + セリフ + 左揃え + 160px余白</p>
+          <p class="text-small">指摘なしは「問題なし」の証明ではありません。ブランドに合うなら、そのまま選べます。</p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">08 / Project audit</p>
+          <h3>audit_project</h3>
+          <p class="text-small">指定したローカルHTML/CSSを読み取り専用で確認。alt、フォームラベル、見出し、静的コントラストなどの候補をソース位置付きで返す。</p>
+        </div>
+        <div>
+          <div class="code" style="padding: 16px; font-size: 11px;">openmcpart audit ./my-app --fail-on high</div>
+          <p class="mono" style="margin-top: 8px; font-size: 10px;">No code execution / No network / No writes</p>
+        </div>
+      </div>
+
+      <div class="tool-item">
+        <div>
+          <p class="tool-name">09 / Design tokens</p>
+          <h3>extract_project_tokens</h3>
+          <p class="text-small">CSS変数、色、フォント、余白、角丸、影の候補を読み取り専用で抽出。JSONまたはMarkdownで利用。</p>
+        </div>
+        <div>
+          <p class="mono" style="font-size: 11px;">openmcpart tokens ./my-app --format json</p>
         </div>
       </div>
     </div>
 
     <div style="margin-top: 48px; display: flex; gap: 16px;">
-      <a href="./playground.html" class="btn btn-primary">全16ツールを試す —</a>
-      <a href="https://github.com/hrfrutrd-dev/openmcpart" class="btn btn-secondary">GitHub</a>
+      <a href="./playground.html" class="btn btn-primary">Playgroundの例を試す —</a>
+      <a href="https://github.com/hrfrutrd-dev/openmcpart" class="btn btn-secondary">全18ツールと設定 —</a>
     </div>
   </section>
 
@@ -250,7 +274,7 @@
       <div class="col-5">
         <h2>1分で<br>セットアップ</h2>
         <p class="text-small" style="margin-top: 16px; max-width: 320px;">
-          stdio transport。1行の設定で全Agent対応。外部APIなし。
+          stdio設定例を掲載。利用するMCPクライアントの対応Transportを確認してください。外部AI APIキーは不要。
         </p>
       </div>
       <div class="col-7">
@@ -264,20 +288,20 @@
 }</div>
         <p class="mono" style="margin-top: 16px; font-size: 11px;">~/Library/Application Support/Claude/claude_desktop_config.json</p>
         <div style="margin-top: 24px; display: flex; gap: 32px;" class="text-small">
-          <span>Claude Desktop ✓</span>
-          <span>Cursor ✓</span>
-          <span>VS Code ✓</span>
-          <span>Any Agent ✓</span>
+          <span>Claude config example</span>
+          <span>Cursor config example</span>
+          <span>VS Code config example</span>
         </div>
       </div>
     </div>
   </section>
+  </main>
 
   <!-- Footer - Small, mono -->
   <footer class="footer container">
     <div class="grid-12">
       <div class="col-5">
-        <p>openmcpart — Universal Design MCP Server</p>
+        <p>openmcpart — Design Toolkit & MCP Server</p>
         <p style="margin-top: 8px;">紙とインク。0.5pxの線で区切る。AIっぽくない、洗練されたUIのためのMCP。</p>
       </div>
       <div class="col-7" style="display: flex; gap: 48px;">
@@ -307,7 +331,7 @@
     </div>
     <div style="margin-top: 48px; padding-top: 24px; border-top: 0.5px solid var(--hairline); display: flex; justify-content: space-between;">
       <span>© 2026 openmcpart — MIT</span>
-      <span>Built with paper, ink, and 0.5px lines. No AI tropes.</span>
+      <span>Paper &amp; Ink is one optional profile; choose the style that fits.</span>
     </div>
   </footer>
 

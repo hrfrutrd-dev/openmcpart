@@ -3,13 +3,21 @@
 
 // Color utils (same as Python)
 function hexToRgb(hex) {
-  hex = hex.replace('#', '');
+  if (typeof hex !== 'string' || !/^#?(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(hex.trim())) {
+    throw new Error('Expected a 3- or 6-digit hexadecimal color.');
+  }
+  hex = hex.trim().replace('#', '');
   if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
   return {
     r: parseInt(hex.slice(0,2), 16),
     g: parseInt(hex.slice(2,4), 16),
     b: parseInt(hex.slice(4,6), 16)
   };
+}
+
+function normalizeHexColor(hex) {
+  const {r, g, b} = hexToRgb(hex);
+  return `#${[r, g, b].map(channel => channel.toString(16).padStart(2, '0')).join('')}`;
 }
 
 function rgbToHsl(r, g, b) {
@@ -90,7 +98,7 @@ const tools = {
     name: "generate_sophisticated_ui",
     controls: `
       <div class="control-group">
-        <label>Purpose</label>
+        <label for="purpose">Purpose</label>
         <select id="purpose" class="input" style="border: 0.5px solid var(--hairline); padding: 0 12px;">
           <option value="landing page">landing page</option>
           <option value="dashboard">dashboard</option>
@@ -99,7 +107,7 @@ const tools = {
         </select>
       </div>
       <div class="control-group">
-        <label>Aesthetic</label>
+        <label for="aesthetic">Aesthetic</label>
         <select id="aesthetic" class="input" style="border: 0.5px solid var(--hairline); padding: 0 12px;">
           <option value="paper_ink">paper_ink — Paper & Ink</option>
           <option value="clay_moss">clay_moss — Clay & Moss</option>
@@ -166,51 +174,42 @@ h1 { font-family: var(--font-serif); font-size: 64px; line-height: 0.9; letter-s
     name: "critique_ai_look",
     controls: `
       <div class="control-group">
-        <label>Describe your design (AIっぽいデザインを説明)</label>
+        <label for="designDesc">Describe your design (style direction)</label>
         <textarea id="designDesc" class="input" style="height: 80px; padding: 12px; border: 0.5px solid var(--hairline); resize: none;" placeholder="例: 紫グラデ背景に丸いカードが3列並ぶ、影が大きく、中央揃え、✨アイコン">紫グラデ背景に丸いカードが3列並ぶ、影が大きく、中央揃え、✨アイコン</textarea>
       </div>
       <button class="btn btn-primary" onclick="runTool('critique_ai')">Critique —</button>
     `,
     run: () => {
-      const desc = document.getElementById('designDesc')?.value || '紫グラデ、丸いカード、影';
-      const tropes = [
-        { trope: "Purple → Blue gradient", why: "2023-24年のAIジェネリック", fix: "単色 + 紙の質感" },
-        { trope: "Rounded 24px cards", why: "AIが好む安全な丸み", fix: "0-4px、sharpが洗練" },
-        { trope: "Soft large shadows", why: "浮かせれば良いと思うAI", fix: "影なし + 0.5px hairline" },
-        { trope: "Centered + blob", why: "全てのAI LPが同じ", fix: "左寄せ、右に大きく余白" },
+      const description = document.getElementById('designDesc')?.value.trim() || '';
+      if (!description) return { error: 'Describe a screen or visual direction first.' };
+      const text = description.toLocaleLowerCase();
+      const rules = [
+        { name: 'Purple → Blue gradient', groups: [['purple', 'violet', '紫'], ['gradient', 'グラデ']], fix: 'Use a palette chosen for the brand; a solid or subtle gradient are both options.' },
+        { name: 'Rounded 24px cards everywhere', groups: [['24px', '24 px', 'rounded-2xl', '角丸24', '丸いカード', 'rounded cards']], fix: 'Vary radius by component purpose and brand.' },
+        { name: 'Soft large shadows', groups: [['shadow', 'box-shadow', 'drop-shadow', '影']], fix: 'Use elevation only where it helps hierarchy; borders are another option.' },
+        { name: 'Sparkles or generic magic copy', groups: [['✨', 'sparkle', 'magic', 'magical', 'supercharge']], fix: 'Use specific copy that describes the product benefit.' },
+        { name: 'Centered hero or blob layout', groups: [['centered hero', 'centered blob', 'center-aligned', '中央揃え', '中央寄せ', '中央配置']], fix: 'Compare alignment choices against the content and brand.' },
+        { name: 'Three-column icon feature grid', groups: [['3-col', '3 column', '3-column', '3列', 'three-column']], fix: 'Try a different information hierarchy if the repeated grid feels generic.' },
+        { name: 'Inter used everywhere', groups: [['inter only', 'inter everywhere', 'interだけ', 'interのみ']], fix: 'A single family can work; consider a second family only if it improves hierarchy.' },
+        { name: 'Bouncy scale hover', groups: [['bouncy', 'bounce', 'scale-105', 'scale hover']], fix: 'Use motion that communicates state and respects reduced-motion preferences.' },
+        { name: 'Neon or high saturation', groups: [['neon', 'high saturation', '高彩度', 'ネオン']], fix: 'Choose saturation to fit the brand and maintain sufficient contrast.' }
       ];
-      
+      const detected = rules.filter(rule => rule.groups.every(group => group.some(token => text.includes(token))));
+      const suggestions = detected.map(rule => ({
+        issue: rule.name,
+        fix: rule.fix,
+        priority: 'optional_style_change',
+        confidence: 'keyword_heuristic',
+        note: 'Aesthetic preferences are not universal quality or accessibility failures.'
+      }));
       return {
-        input: desc,
-        detected: tropes,
-        before: "紫グラデ + 24px角丸カード + shadow-lg + 中央揃え + ✨ + 3列アイコン",
-        after: "紙色 #fdfcfa + 0px角 + 0.5px hairline + セリフ見出し + 左揃え + 160px余白",
-        quick_fixes: [
-          "背景を #fdfcfa (紙色) に",
-          "角丸を 0px に",
-          "影を消して 0.5px border に",
-          "見出しを Instrument Serif に",
-          "セクション間を 160px に",
-          "中央揃えを左揃えに",
-          "3列を1列 + 詳細に"
-        ],
-        css_fix: `/* Before - AIっぽい */
-.ai-card {
-  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
-  border-radius: 24px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-  text-align: center;
-}
-
-/* After - 洗練 */
-.refined-card {
-  background: #fdfcfa;
-  border: 0.5px solid #e8e3dc;
-  border-radius: 0;
-  padding: 32px;
-  text-align: left;
-}
-.refined-card:hover { border-color: #121212; }`
+        input: description,
+        analysis_type: 'keyword_heuristic',
+        detected_ai_tropes: detected.map(rule => rule.name),
+        suggestions,
+        aesthetic_note: 'Keep any pattern that fits the product, brand, and users. This tool flags style patterns, not objective defects.',
+        alternative_profile: 'paper_ink',
+        quick_fixes: suggestions.map(item => item.fix)
       };
     }
   },
@@ -219,11 +218,11 @@ h1 { font-family: var(--font-serif); font-size: 64px; line-height: 0.9; letter-s
     name: "generate_color_palette",
     controls: `
       <div class="control-group">
-        <label>Base Color (hex)</label>
-        <input id="baseColor" class="input" value="#121212" placeholder="#3b82f6">
+        <label for="baseColor">Base Color (HEX; blank uses mood or #3b82f6)</label>
+        <input id="baseColor" class="input" value="" placeholder="#3b82f6">
       </div>
       <div class="control-group">
-        <label>Mood (or leave empty if base color set)</label>
+        <label for="mood">Mood (used when base color is blank)</label>
         <select id="mood" class="input" style="border: 0.5px solid var(--hairline); padding: 0 12px;">
           <option value="">—</option>
           <option value="paper_ink">paper_ink — No AI purple</option>
@@ -235,32 +234,45 @@ h1 { font-family: var(--font-serif); font-size: 64px; line-height: 0.9; letter-s
       <button class="btn btn-primary" onclick="runTool('palette')">Generate Palette —</button>
     `,
     run: () => {
-      const base = document.getElementById('baseColor')?.value || '#121212';
-      const mood = document.getElementById('mood')?.value;
+      const baseInput = document.getElementById('baseColor')?.value.trim() || '';
+      const mood = document.getElementById('mood')?.value || '';
+      const moodBases = { calm: '#70b8db', tech: '#306ee8', minimal: '#e6e6e6' };
+      const baseCandidate = baseInput || moodBases[mood] || '#3b82f6';
       
-      if (mood === 'paper_ink' || !base) {
+      if (mood === 'paper_ink' && !baseInput) {
         return {
-          mood: "paper_ink - AIっぽくない",
+          mood: "paper_ink — optional aesthetic profile",
           primary: "#121212",
           secondary: "#fdfcfa",
           accent: "#c45a3c",
           neutrals: { paper: "#fdfcfa", paper_dark: "#f5f3ef", hairline: "#e8e3dc", ink: "#121212" },
-          usage: "60% paper, 30% ink, 10% terracotta. No purple, no gradient.",
+          note: "Paper & Ink is an optional aesthetic profile; adapt it to the brand.",
           css: ":root { --paper: #fdfcfa; --ink: #121212; --hairline: #e8e3dc; --accent: #c45a3c; --radius: 0px; }"
         };
       }
       
       try {
+        const base = normalizeHexColor(baseCandidate);
         const {h,s,l} = rgbToHsl(...Object.values(hexToRgb(base)));
         const harmonies = [h, (h+30)%360, (h+180)%360].map(hue => hslToHex(hue, s, l));
+        const tints = [1,2,3].map(step => hslToHex(h, s, Math.min(95, l+step*12)));
+        const shades = [1,2,3].map(step => hslToHex(h, s, Math.max(8, l-step*12)));
+        const colors = [...new Set([...harmonies, tints[0], shades[0]])];
         return {
+          mood: baseInput ? null : (mood || null),
           base_color: base,
-          harmony: "analogous + complementary",
-          colors: harmonies,
-          tints: [1,2,3].map(i => hslToHex(h, s, Math.min(95, l+i*12))),
-          shades: [1,2,3].map(i => hslToHex(h, s, Math.max(8, l-i*12))),
-          css_variables: harmonies.map((c,i) => `--color-${i}: ${c};`).join('\n'),
-          note: "No purple gradient. Single accent, paper base."
+          harmony: "analogous + complementary (browser example)",
+          colors,
+          tints,
+          shades,
+          css_variables: [
+            `--color-primary: ${harmonies[0]};`,
+            `--color-secondary: ${harmonies[1]};`,
+            `--color-accent: ${harmonies[2]};`,
+            `--color-tint: ${tints[0]};`,
+            `--color-shade: ${shades[0]};`
+          ].join('\n'),
+          note: "Standalone browser example; the MCP server is the source of truth for server output."
         };
       } catch(e) {
         return { error: e.message };
@@ -272,11 +284,11 @@ h1 { font-family: var(--font-serif); font-size: 64px; line-height: 0.9; letter-s
     name: "check_color_contrast",
     controls: `
       <div class="control-group">
-        <label>Foreground (text)</label>
+        <label for="fg">Foreground (text)</label>
         <input id="fg" class="input" value="#fdfcfa">
       </div>
       <div class="control-group">
-        <label>Background</label>
+        <label for="bg">Background</label>
         <input id="bg" class="input" value="#121212">
       </div>
       <button class="btn btn-primary" onclick="runTool('contrast')">Check Contrast —</button>
@@ -305,7 +317,7 @@ h1 { font-family: var(--font-serif); font-size: 64px; line-height: 0.9; letter-s
     name: "suggest_typography_pairing",
     controls: `
       <div class="control-group">
-        <label>Mood</label>
+        <label for="typoMood">Mood</label>
         <select id="typoMood" class="input" style="border: 0.5px solid var(--hairline); padding: 0 12px;">
           <option value="editorial">editorial — 脱AIにセリフ</option>
           <option value="paper_ink">paper_ink — Paper & Ink</option>
@@ -365,11 +377,16 @@ function renderControls(toolKey) {
 
 function runTool(toolKey) {
   const tool = tools[toolKey] || tools.sophisticated;
-  const result = tool.run();
+  let result;
+  try {
+    result = tool.run();
+  } catch (error) {
+    result = { error: error instanceof Error ? error.message : String(error) };
+  }
   document.getElementById('output').textContent = JSON.stringify(result, null, 2);
   
   // Update visual preview for sophisticated
-  if (toolKey === 'sophisticated') {
+  if (toolKey === 'sophisticated' && result.palette) {
     const preview = document.getElementById('visualPreview');
     preview.innerHTML = `
       <p class="mono" style="margin-bottom: 16px;">Visual Preview — ${result.aesthetic}</p>
@@ -390,29 +407,45 @@ function runTool(toolKey) {
   }
 }
 
-function copyOutput() {
+async function copyOutput() {
   const text = document.getElementById('output').textContent;
-  navigator.clipboard.writeText(text);
   const btn = document.querySelector('button[onclick="copyOutput()"]');
-  const orig = btn.textContent;
-  btn.textContent = 'Copied —';
-  setTimeout(() => btn.textContent = orig, 1000);
+  const originalLabel = btn.textContent;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      const temporaryInput = document.createElement('textarea');
+      temporaryInput.value = text;
+      temporaryInput.setAttribute('readonly', '');
+      temporaryInput.style.position = 'fixed';
+      temporaryInput.style.opacity = '0';
+      document.body.appendChild(temporaryInput);
+      temporaryInput.select();
+      const copied = document.execCommand('copy');
+      temporaryInput.remove();
+      if (!copied) throw new Error('Clipboard access is unavailable in this browser.');
+    }
+    btn.textContent = 'Copied —';
+  } catch (error) {
+    btn.textContent = 'Copy unavailable';
+  }
+  window.setTimeout(() => { btn.textContent = originalLabel; }, 1500);
 }
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
-  // Tool nav click
-  document.querySelectorAll('#toolNav li').forEach(li => {
-    li.addEventListener('click', () => {
-      document.querySelectorAll('#toolNav li').forEach(l => l.classList.remove('active'));
-      li.classList.add('active');
-      currentTool = li.dataset.tool;
+  const toolButtons = document.querySelectorAll('#toolNav [data-tool]');
+  toolButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      toolButtons.forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      currentTool = button.dataset.tool;
       renderControls(currentTool);
-      // Auto run
-      setTimeout(() => runTool(currentTool), 100);
+      runTool(currentTool);
     });
   });
-  
+
   renderControls('sophisticated');
-  setTimeout(() => runTool('sophisticated'), 100);
+  runTool('sophisticated');
 });

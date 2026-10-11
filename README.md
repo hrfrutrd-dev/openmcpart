@@ -1,37 +1,45 @@
-# openmcpart - Universal Design Specialist MCP Server
-### どんなAgentでも使えるデザイン専門MCPサーバー — AIっぽくない、洗練されたUI
+# openmcpart — Design Tools & Local Audit MCP Server
+### MCP対応Agentで使うデザイン支援サーバー — スタイル提案とローカル静的監査
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)](https://www.python.org)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Sophisticated](https://img.shields.io/badge/UI-Paper%20%26%20Ink%20No%20AI%20Tropes-black)](./web/)
+[![Paper & Ink](https://img.shields.io/badge/UI-Optional%20Paper%20%26%20Ink-black)](./web/)
 
-**Claude Desktop, Cursor, VS Code, ChatGPT, どんなMCP対応Agentでも使えるデザイン専門サーバー**
+**Claude Desktop、Cursor、VS CodeなどのMCP対応クライアントで利用できるデザイン支援サーバー**
 
-プロのデザイナーが持つ知識を、AI Agentが使える16のツールとしてパッケージ化。
-**AIっぽくない、洗練されたUI**のための2つの新ツールを含む: `generate_sophisticated_ui`, `critique_ai_look`
+対応するTransportやResourcesの範囲はクライアントごとに異なります。
 
-> 紙とインク。0.5pxの線で区切る。紫グラデも、24px角丸も、影も、✨も使わない。
+デザイン支援・トークン生成・静的UI監査を、AI Agentが使える18のMCPツールとして提供します。
+Paper & Inkなどの美的方向性は**選択可能なスタイルプリセット**であり、普遍的な品質基準として強制しません。
 
-- **Web Demo**: `web/index.html` - 洗練されたUIのライブデモ (Paper #fdfcfa / Ink #121212 / Hairline 0.5px / Radius 0px)
-- **Playground**: `web/playground.html` - 16ツールをブラウザで試す
+新しいローカル監査ツール: `audit_project`, `extract_project_tokens`
+
+> Paper & Inkは選択可能な美的方向性のひとつ。紫、角丸、影、グラデーションを一律に禁止せず、ブランドと用途に合わせて選びます。
+
+- **Web Demo**: `web/index.html` - スタイルプリセットのデモ
+- **Playground**: `web/playground.html` - ブラウザ内の5つのサンプル体験。全MCPツールの動作はローカルサーバーまたはCLIで確認してください。
+- **Project Audit**: HTML/CSSの静的監査とトークン抽出。MCPツールでは対象パスが必須です。CLIは`openmcpart audit .`のように指定したローカルパスを読み取り、コード実行・ネットワーク通信・書き込みは行いません。
+- **GitHub Action**: リポジトリ内で`uses: ./`として実行できるComposite Action。Markdownサマリーと重大度しきい値を提供します（GitHub上での実実行は未確認）。
 
 ---
 
 ## ✨ 特徴
 
-- **Universal**: MCP標準準拠 - 1回実装で全Agent対応
-- **Sophisticated**: AIっぽくない洗練UI - Paper & Ink, hairline, serif, 非対称, 160px余白
-- **Professional**: 8pt Grid, WCAG, 60-30-10ルールなどプロのベストプラクティス
-- **Practical**: CSS / Tailwind / Figmaでそのまま使えるコードを出力
-- **Japanese First**: 日本語フォント、日本語UXにも完全対応
-- **No API Key**: 外部API不要、ローカル完結
+- **MCP-compatible**: MCPを使うクライアントから接続可能。対応する機能・Transportはクライアントごとに確認
+- **Flexible**: Paper & Inkなど複数のスタイル方向を提供。好みはブランドと用途に合わせて選択
+- **Practical**: CSS / Tailwind / JSON形式の実装可能な出力。DTCG-style JSONも生成
+- **Project-aware (static)**: 指定したローカルHTML/CSSのアクセシビリティ候補と既存トークンを検査
+- **Japanese First**: 日本語フォント、日本語UXを考慮した提案
+- **Local-first**: 外部AI APIキー不要。プロジェクト監査は読み取り専用でネットワークを使わない
 
 ---
 
-## 🎨 AIっぽくない洗練されたUIとは？
+## 🎨 スタイルプリセットの例: Paper & Ink
 
-### AI定番 (避ける) → 洗練 (こちら)
+「AIっぽくない」は本プロジェクトの一つの美的方向性です。以下はPaper & Inkプリセットの例であり、すべてのブランドで避けるべきルールではありません。グラデーション、角丸、影などは目的に合えば使えます。
+
+### Paper & Inkの方向性の例
 
 | AIっぽい (Generic) | 洗練された (Sophisticated) |
 |-------------------|---------------------------|
@@ -53,13 +61,13 @@
 
 ---
 
-## 🛠️ 提供ツール (16 tools)
+## 🛠️ 提供ツール (18 tools)
 
 ### 🎨 Color カラー
 | Tool | 説明 |
 |------|------|
 | `generate_color_palette` | ベースカラー/ムードから調和の取れたパレット生成。complementary, analogous, triadic等 |
-| `check_color_contrast` | WCAG準拠コントラストチェック + 色覚多様性シミュレーション |
+| `check_color_contrast` | WCAGコントラスト比と閾値の参考評価 + 色覚多様性シミュレーション |
 | `generate_gradient` | グラデーション生成 (linear/radial/conic) CSS & Tailwind出力 |
 
 ### ✍️ Typography タイポグラフィ
@@ -77,14 +85,16 @@
 ### 🧩 Design Tokens デザインシステム
 | Tool | 説明 |
 |------|------|
-| `generate_design_tokens` | 完全なデザイントークン生成 (色, タイポ, 余白, 角丸, 影) |
-| `generate_tailwind_config` | Tailwind設定ファイル生成 |
+| `generate_design_tokens` | 解決済みHEXカラーを含むデザイントークン生成 (色, タイポ, 余白, 角丸, 影)。CSS / Tailwind / JSON / DTCG-style JSON |
+| `generate_tailwind_config` | 検証済みの色スケールを含むTailwind設定ファイル生成 |
+| `extract_project_tokens` | 明示したローカルプロジェクトからCSS変数、色、フォント、余白、角丸、影を読み取り専用で抽出 |
 
 ### ♿ Accessibility & Critique
 | Tool | 説明 |
 |------|------|
-| `check_accessibility` | WCAGチェックリスト + 自動チェック |
-| `critique_design` | 8原則ヒューリスティック評価 + アクションプラン |
+| `check_accessibility` | コントラスト・サイズ候補 + 手動チェックリスト。適合スコアは出さない |
+| `audit_project` | 指定したローカルHTML/CSSプロジェクトを読み取り専用で静的監査。根拠・WCAG参考・制約を含む |
+| `critique_design` | 説明文の明示的な懸念をキーワード検出し、8原則の手動レビュー項目を提示（画面画像やDOMは解析しません） |
 | `suggest_component_variants` | UIコンポーネントバリエーション (Button, Card, Input等) |
 
 ### 🏷️ Branding ブランディング
@@ -96,8 +106,8 @@
 ### ✨ Sophisticated UI — AIっぽくない洗練 (NEW)
 | Tool | 説明 |
 |------|------|
-| `generate_sophisticated_ui` | AIっぽくないUI仕様生成。Paper & Ink, Clay & Moss, Editorial Noir, Atelierの4 aesthetic。0px角丸、hairline、セリフ体、非対称、160px余白 |
-| `critique_ai_look` | AIっぽいデザインを批評。紫グラデ、24px角丸、影、✨等を検出し、Before/Afterで洗練された代替案を提示 |
+| `generate_sophisticated_ui` | Paper & Ink, Clay & Moss, Editorial Noir, Atelierのスタイル仕様を生成。選んだ美的方向の例として利用 |
+| `critique_ai_look` | 説明文に明示されたスタイルパターンだけをヒューリスティックに検出。美的好みを普遍的な不具合とは扱わない |
 
 ### 📚 Resources & Prompts
 - `design://tokens/template` - トークンテンプレート
@@ -130,8 +140,35 @@ pip install -e .
 
 ```bash
 openmcpart --help
-# または
+# MCPサーバーを起動
 design-mcp
+```
+
+### ローカルプロジェクトを監査する
+
+```bash
+# HTML/CSSの静的アクセシビリティ候補をMarkdownで確認
+openmcpart audit ./my-app
+
+# CI向け: high以上の検出があれば終了コード1
+openmcpart audit ./my-app --fail-on high
+
+# JSONレポートを出力
+openmcpart audit ./my-app --format json
+
+# 既存デザイントークン候補を抽出
+openmcpart tokens ./my-app --format json
+```
+
+走査は指定したディレクトリ内の対応テキストファイルのみを読み取ります。コード実行・ネットワークアクセス・ファイル書き込みは行いません。デフォルトで隠しフォルダ、依存関係フォルダ、生成物、1MBを超えるファイルを除外し、1回の走査は合計20MBまでです。検査結果は静的な候補であり、ブラウザや支援技術による確認の代替ではありません。
+
+GitHub Actionsでは、このリポジトリのルート`action.yml`を使えます。公開タグを利用する際は、利用するリリースのタグまたはcommit SHAに固定してください:
+
+```yaml
+- uses: hrfrutrd-dev/openmcpart@main
+  with:
+    project-path: .
+    fail-on: high
 ```
 
 ---
@@ -254,10 +291,10 @@ MCP_TRANSPORT=stdio openmcpart
 {
   "mood": "calm",
   "description": "穏やか・安心 - ブルー系",
-  "primary": "#5ba4cf",
-  "secondary": "#6b8fc2",
-  "accent": "#cf8a5b",
-  "css_variables": "--color-primary: #5ba4cf; ..."
+  "primary": "#70b8db",
+  "secondary": "#db9370",
+  "accent": "#a1d0e7",
+  "css_variables": "--color-1: #70b8db; ..."
 }
 ```
 
@@ -265,47 +302,32 @@ MCP_TRANSPORT=stdio openmcpart
 
 ## 🏗️ アーキテクチャ
 
-```
-src/openmcpart/
-├── server.py          # FastMCPサーバー本体 (13 tools + 4 resources + 3 prompts)
-├── tools/
-│   ├── colors.py      # カラー関連 (3 tools)
-│   ├── typography.py  # タイポグラフィ (2 tools)
-│   ├── layout.py      # レイアウト (2 tools)
-│   ├── tokens.py      # デザイントークン (2 tools)
-│   ├── accessibility.py # アクセシビリティ & 批評 (3 tools)
-│   └── branding.py    # ブランディング (2 tools)
-└── utils/
-    └── color_utils.py # 色変換・コントラスト計算
-```
+現在は **18 tools / 4 resources / 3 prompts**。構成・Transport・監査の制約は[Architecture](./docs/ARCHITECTURE.md)を参照してください。
 
-- **Transport**: stdio (標準) - 全MCPクライアント対応
-- **Dependencies**: `mcp>=1.20.0`, `pydantic>=2.0.0` のみ - 軽量
-- **No External API**: 完全ローカル動作
+- stdioを標準Transportとして使用。SSE／streamable HTTPも実装
+- ランタイム依存はMCP SDKとPydantic。監査ロジックは標準ライブラリ
+- MCPツールとCLIはローカル計算。監査対象のコードを実行しない
 
 ---
 
-## 🎯 デザイン原則 (このMCPが準拠する原則)
+## 🎯 デザイン原則
 
-このMCP自体が以下の原則に従って設計されています:
-
-1. **8pt Grid**: すべての余白は8の倍数
-2. **60-30-10 Rule**: 60% neutral, 30% primary, 10% accent
-3. **WCAG AA**: コントラスト 4.5:1以上
-4. **2 Fonts, 3 Weights**: フォントは2種類、ウェイトは3つまで
-5. **Less is More**: 必要最低限のツールで最大の価値
+8ptグリッド、60-30-10、フォント数の制限などは**出発点となるヒューリスティック**です。ブランドやユーザーの要件に応じて調整してください。コントラスト基準も対象テキストの大きさ・用途に合わせて判定します。静的監査の結果だけでWCAG適合を保証することはありません。
 
 ---
 
-## 🧪 テスト
+## 🧪 テストとLint
 
 ```bash
-pip install pytest
-pytest tests/ -v
+pip install -e '.[dev]'
+ruff check src tests
+pytest -q
 
 # MCP Inspectorでテスト
 npx @modelcontextprotocol/inspector openmcpart
 ```
+
+GitHub ActionsではPython 3.10–3.13のテスト、Lint、CLI smoke testを実行します。
 
 ---
 
@@ -313,7 +335,8 @@ npx @modelcontextprotocol/inspector openmcpart
 
 - [MCP公式ドキュメント](https://modelcontextprotocol.io)
 - [examples/](./examples) - 設定例と使用例
-- [docs/](./docs) - 詳細ドキュメント
+- [docs/USAGE_JA.md](./docs/USAGE_JA.md) - MCP設定・CLI利用ガイド
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - 構成・監査の範囲・安全性
 
 ---
 
@@ -341,6 +364,6 @@ MIT License - 詳細は [LICENSE](LICENSE) を参照
 
 ---
 
-**Made with ❤️ for all Agents - どんなAgentでも使えるデザインMCP**
+**Made with ❤️ for MCP-compatible clients and local-first design workflows**
 
 > "Good design is as little design as possible" - Dieter Rams

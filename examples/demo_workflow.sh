@@ -1,5 +1,5 @@
 #!/bin/bash
-# Demo workflow showing universal agent compatibility
+# Demo workflow showing direct MCP tool calls
 
 echo "=== openmcpart Design MCP Server Demo ==="
 echo ""
@@ -39,4 +39,4 @@ echo ""
 echo "3. Claude Desktop設定:"
 echo "   cat examples/claude_desktop_config.json"
 echo ""
-echo "✅ Demo complete! このMCPサーバーはどんなAgentでも使えます"
+echo "✅ Demo complete! MCPクライアントごとに接続設定・対応Transportを確認してください"
