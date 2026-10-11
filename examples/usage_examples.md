@@ -100,7 +100,7 @@ generate_tailwind_config(primary="#6366f1", style="modern")
 - 完全なトークンJSON
 - CSS変数
 - Tailwind config
-- Figma Tokens対応
+- CSS・Tailwind・JSON・DTCG-style JSON出力（Figmaプラグイン互換性は利用先で確認）
 
 ---
 
@@ -228,7 +228,7 @@ suggest_component_variants(component="button", style="modern", count=5)
 4. **トークン**
    ```
    generate_design_tokens(primary="#3b82f6", brand_name="MySaaS")
-   → 完全なデザインシステム
+   → 再利用可能な基本デザイントークンセット
    ```
 
 5. **レイアウト**
@@ -250,4 +250,4 @@ suggest_component_variants(component="button", style="modern", count=5)
    critique_design("SaaSランディング、作成したデザイン...")
    ```
 
-これで、どんなAgentでもプロレベルのデザインを作成可能！
+MCP対応クライアントに接続して利用できます。TransportやResources・Promptsの対応状況はクライアントごとに確認してください。

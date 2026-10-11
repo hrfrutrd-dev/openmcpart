@@ -1,7 +1,7 @@
 """
 Typography tools
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 FONT_PAIRINGS = {
     "modern_minimal": {
@@ -81,14 +81,18 @@ TYPE_SCALES = {
     "golden_ratio": 1.618
 }
 
-def tool_suggest_typography_pairing(mood: str = "modern_minimal", industry: str = None, language: str = "en") -> Dict[str, Any]:
-    mood = mood.lower()
-    # fuzzy matching
+def tool_suggest_typography_pairing(mood: str = "", industry: str = None, language: str = "en") -> Dict[str, Any]:
+    mood = (mood or "").strip().lower()
+    industry = (industry or "").strip().lower()
+    normalized_language = (language or "en").strip().lower().replace("_", "-")
+    language_code = normalized_language.split("-", 1)[0]
+    # Prefer an explicit style; otherwise infer it from industry/language.
     best_match = None
-    for key in FONT_PAIRINGS:
-        if mood in key or key in mood:
-            best_match = key
-            break
+    if mood:
+        for key in FONT_PAIRINGS:
+            if mood in key or key in mood:
+                best_match = key
+                break
     
     # industry mapping
     if not best_match and industry:
@@ -113,7 +117,7 @@ def tool_suggest_typography_pairing(mood: str = "modern_minimal", industry: str 
                 best_match = v
                 break
     
-    if language and "ja" in language.lower() or "japanese" in language.lower():
+    if language_code in {"ja", "jpn"} or normalized_language == "japanese":
         if "elegant" in mood or "luxury" in mood:
             best_match = "japanese_elegant"
         else:
@@ -152,7 +156,7 @@ def tool_suggest_typography_pairing(mood: str = "modern_minimal", industry: str 
     }
     
     return {
-        "requested_mood": mood,
+        "requested_mood": mood or None,
         "matched_style": best_match,
         "pairing": pairing,
         "type_scale": detailed_scale,
@@ -174,8 +178,12 @@ fontFamily: {{
 """
     }
 
-def tool_generate_type_scale(base_size: int = 16, ratio: str = "major_third",) -> Dict[str, Any]:
-    ratio_value = TYPE_SCALES.get(ratio, TYPE_SCALES["major_third"])
+def tool_generate_type_scale(base_size: int = 16, ratio: str = "major_third") -> Dict[str, Any]:
+    if not isinstance(base_size, int) or isinstance(base_size, bool) or not 10 <= base_size <= 24:
+        return {"error": "base_size must be an integer between 10 and 24"}
+    if ratio not in TYPE_SCALES:
+        return {"error": f"Unsupported ratio: {ratio}. Choose from {sorted(TYPE_SCALES)}"}
+    ratio_value = TYPE_SCALES[ratio]
     
     # Generate scale both up and down
     scale_steps = [

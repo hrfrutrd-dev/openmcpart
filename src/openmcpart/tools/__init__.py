@@ -5,6 +5,7 @@ from .tokens import tool_generate_design_tokens, tool_generate_tailwind_config
 from .accessibility import tool_check_accessibility, tool_critique_design, tool_suggest_component_variants
 from .branding import tool_extract_design_principles, tool_generate_moodboard_brief
 from .ui_generator import tool_generate_sophisticated_ui, tool_critique_ai_look
+from .project_audit import tool_audit_project, tool_extract_project_tokens
 
 __all__ = [
     "tool_generate_color_palette",
@@ -23,4 +24,6 @@ __all__ = [
     "tool_generate_moodboard_brief",
     "tool_generate_sophisticated_ui",
     "tool_critique_ai_look",
+    "tool_audit_project",
+    "tool_extract_project_tokens",
 ]

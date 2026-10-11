@@ -1,7 +1,7 @@
 """
 Layout and spacing tools
 """
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 LAYOUT_PATTERNS = {
     "landing_saas": {
@@ -65,6 +65,16 @@ SPACING_SYSTEM = {
 }
 
 def tool_suggest_layout(content_type: str, target: str = "desktop", style: str = "minimal") -> Dict[str, Any]:
+    if not isinstance(content_type, str) or not content_type.strip():
+        return {"error": "content_type must not be empty"}
+    if not isinstance(target, str) or not isinstance(style, str):
+        return {"error": "target and style must be strings"}
+    target = target.lower()
+    style = style.lower()
+    if target not in {"desktop", "tablet", "mobile"}:
+        return {"error": "target must be desktop, tablet, or mobile"}
+    if style not in {"minimal", "bold", "soft", "balanced"}:
+        return {"error": "style must be minimal, bold, soft, or balanced"}
     content_type = content_type.lower()
     matched = None
     for key, pattern in LAYOUT_PATTERNS.items():
@@ -136,11 +146,15 @@ def tool_suggest_layout(content_type: str, target: str = "desktop", style: str =
         "8pt_grid_rule": "すべての余白・サイズは8の倍数を基本に (4は例外的に密な箇所で許容)。 8pt gridで一貫性と開発効率を向上。",
         "implementation": {
             "css": f"/* {matched['name']} */\n.container {{ max-width: 1280px; margin: 0 auto; padding: 0 32px; }}\n.section {{ padding: {SPACING_SYSTEM['scale'][12]}px 0; }}\n.card {{ border-radius: {style_details['radius']}; box-shadow: {style_details['shadow']}; }}",
-            "tailwind": f"max-w-7xl mx-auto px-8 py-24 grid grid-cols-12 gap-6"
+            "tailwind": "max-w-7xl mx-auto px-8 py-24 grid grid-cols-12 gap-6"
         }
     }
 
 def tool_generate_spacing_system(base: int = 8, max_scale: int = 10) -> Dict[str, Any]:
+    if not isinstance(base, int) or isinstance(base, bool) or not 2 <= base <= 16:
+        return {"error": "base must be an integer between 2 and 16"}
+    if not isinstance(max_scale, int) or isinstance(max_scale, bool) or not 5 <= max_scale <= 20:
+        return {"error": "max_scale must be an integer between 5 and 20"}
     scale = [base * i for i in range(0, max_scale+1)]
     # also include 4pt half steps for first few
     detailed = {}

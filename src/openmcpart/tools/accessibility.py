@@ -1,7 +1,9 @@
 """
 Accessibility and critique tools
 """
-from typing import Dict, Any, List
+import re
+from typing import Any, Dict
+
 from ..utils.color_utils import contrast_ratio, wcag_level
 
 def tool_check_accessibility(
@@ -104,23 +106,38 @@ def tool_check_accessibility(
             }
         ])
     
-    # Font size check
-    try:
-        size_num = int(font_size.replace("px", "").replace("rem", "").strip())
-        if "rem" in font_size:
-            size_num = size_num * 16
-        font_check = {
-            "category": "Perceivable",
-            "item": "テキストサイズ",
-            "current": font_size,
-            "recommended": "本文16px以上、最小12px",
-            "status": "PASS" if size_num >= 16 else "WARN" if size_num >= 12 else "FAIL"
-        }
-        checks.append(font_check)
-    except:
-        pass
-    
-    # Calculate score
+    # Font-size heuristic. This does not determine whether a real page is readable.
+    size_match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*(px|rem|em|pt)?\s*", font_size.lower())
+    if size_match:
+        size_num = float(size_match.group(1))
+        unit = size_match.group(2) or "px"
+        if unit in {"rem", "em"}:
+            size_num *= 16
+        elif unit == "pt":
+            size_num *= 4 / 3
+        checks.append(
+            {
+                "category": "Perceivable",
+                "item": "テキストサイズ",
+                "current": font_size,
+                "estimated_px": round(size_num, 2),
+                "recommended": "本文は16px程度以上を検討。ユーザーの拡大を妨げないこと。",
+                "status": "PASS" if size_num >= 16 else "WARN" if size_num >= 12 else "FAIL",
+                "note": "一つの指定値だけを確認する簡易ヒューリスティックです。ページ全体の可読性判定ではありません。",
+            }
+        )
+    else:
+        checks.append(
+            {
+                "category": "Perceivable",
+                "item": "テキストサイズ",
+                "current": font_size,
+                "status": "UNKNOWN",
+                "note": "px, rem, em, pt形式の単一サイズとして解釈できませんでした。",
+            }
+        )
+
+    # Avoid implying conformance through a synthetic percentage score.
     fail_count = sum(1 for c in checks if c.get("status") == "FAIL")
     total = len(checks) + len(general_checks)
     
@@ -133,7 +150,8 @@ def tool_check_accessibility(
             "automated_checks": len(checks),
             "manual_checks": len(general_checks),
             "failures": fail_count,
-            "score": f"{max(0, 100 - fail_count*15)}/100 (推定)",
+            "automated_status": "FAIL" if fail_count else "NO_AUTOMATED_FAILURES",
+            "note": "手動チェック項目は未判定です。この結果はWCAG適合証明や総合スコアではありません。",
         },
         "quick_wins": [
             "1. すべての画像にaltを追加",
@@ -151,103 +169,167 @@ def tool_check_accessibility(
     }
 
 def tool_critique_design(design_description: str, focus: str = "all") -> Dict[str, Any]:
-    """
-    Heuristic evaluation of design
-    """
+    """Offer text-based review prompts and flag only explicitly described concerns."""
+    if not isinstance(design_description, str) or not design_description.strip():
+        return {"error": "design_description must not be empty"}
+    if not isinstance(focus, str):
+        return {"error": "focus must be a string"}
+
+    focus_aliases = {
+        "all": ("all", "すべて", "全て"),
+        "hierarchy": ("hierarchy", "visual hierarchy", "visual_hierarchy", "階層", "視覚的階層"),
+        "consistency": ("consistency", "一貫性"),
+        "proximity": ("proximity", "近接"),
+        "alignment": ("alignment", "整列"),
+        "contrast": ("contrast", "コントラスト"),
+        "repetition": ("repetition", "反復"),
+        "whitespace": ("whitespace", "white space", "spacing", "余白", "スペーシング"),
+        "accessibility": ("accessibility", "a11y", "アクセシビリティ"),
+    }
+    requested_focus = focus.strip().casefold()
+    matched_focus = next(
+        (name for name, aliases in focus_aliases.items() if requested_focus in aliases),
+        None,
+    )
+    if matched_focus is None:
+        choices = ", ".join(focus_aliases)
+        return {"error": f"Unsupported focus: {focus}. Choose from: {choices}"}
+
     heuristics = [
         {
             "principle": "視覚的階層 (Visual Hierarchy)",
-            "question": "最も重要な要素が最も目立っているか？",
-            "checklist": ["サイズのコントラスト", "色・重さのコントラスト", "配置 (F/Zパターン)", "余白によるグルーピング"],
+            "question": "最重要の情報と次の行動が、意図した順序で伝わるか？",
+            "checklist": ["見出しと本文の差", "CTAの優先度", "余白によるグルーピング"],
         },
         {
             "principle": "一貫性 (Consistency)",
-            "question": "同様の要素は同様に見えるか？",
-            "checklist": ["色の一貫性", "タイポグラフィの一貫性", "間隔の一貫性 (8pt grid)", "インタラクションの一貫性"],
+            "question": "同じ役割の要素に一貫性があり、意図的な差分が分かるか？",
+            "checklist": ["色・タイポグラフィ", "間隔とコンポーネント", "操作後の状態"],
         },
         {
             "principle": "近接 (Proximity)",
-            "question": "関連する要素は近くに配置されているか？",
-            "checklist": ["ゲシュタルトの近接の法則", "グループ間は24px+, 要素間は8-16px", "セクション間は64px+"],
+            "question": "関連する情報がまとまり、異なるグループと区別されているか？",
+            "checklist": ["関連要素の距離", "グループ間の余白", "画面幅に応じた再配置"],
         },
         {
             "principle": "整列 (Alignment)",
-            "question": "要素は意図的に整列されているか？",
-            "checklist": ["グリッドに沿っているか", "中央揃えの乱用を避け左揃え基本", "エッジを揃える"],
+            "question": "整列がコンテンツとブランドの意図に沿っているか？",
+            "checklist": ["グリッドやエッジ", "左右・中央揃えの使い分け", "小さい画面での崩れ"],
         },
         {
             "principle": "コントラスト (Contrast)",
-            "question": "重要な違いは明確に区別されているか？",
-            "checklist": ["テキストコントラスト 4.5:1以上", "サイズコントラスト (1.25倍以上)", "色だけでなく形でも区別"],
+            "question": "文字や操作要素が十分に識別できるか？",
+            "checklist": ["色を指定した場合は実際の比率を測定", "色だけに情報を依存しない", "文字サイズに合う基準を使用"],
         },
         {
             "principle": "反復 (Repetition)",
-            "question": "パターンが繰り返され予測可能か？",
-            "checklist": ["同じスタイルの繰り返し", "コンポーネントの再利用", "色・フォントの制限 (3色, 2フォント)"],
+            "question": "繰り返しが予測可能性を高め、ブランドに合っているか？",
+            "checklist": ["再利用可能なコンポーネント", "必要な色・フォントだけを使う", "例外が意図的か"],
         },
         {
             "principle": "余白 (White Space)",
-            "question": "余白は十分かつ意図的か？",
-            "checklist": ["詰め込みすぎていないか", "余白は8の倍数か", "呼吸感があるか"],
+            "question": "情報密度と余白のバランスが用途に合っているか？",
+            "checklist": ["読みやすい行長", "情報グループの距離", "画面サイズに応じた余白"],
         },
         {
             "principle": "アクセシビリティ (Accessibility)",
-            "question": "誰でも使えるか？",
-            "checklist": ["コントラスト", "タッチターゲット44px", "キーボード操作", "代替テキスト"],
+            "question": "キーボード・支援技術・異なる表示条件で使えるか？",
+            "checklist": ["コントラストと色以外の手がかり", "キーボードとフォーカス", "画像の代替テキストとフォームラベル"],
         },
     ]
-    
-    # Filter by focus
-    if focus != "all":
-        focus = focus.lower()
-        heuristics = [h for h in heuristics if focus in h["principle"].lower() or focus in h["question"].lower()] or heuristics
-    
-    # Generate critique based on description keywords
-    critique_points = []
-    desc_lower = design_description.lower()
-    
-    if "ごちゃ" in design_description or "clutter" in desc_lower or "busy" in desc_lower:
-        critique_points.append({"issue": "情報過多", "severity": "高", "suggestion": "要素を50%削減、余白を2倍に。優先度付けを明確に。"})
-    if "色" in design_description or "color" in desc_lower:
-        critique_points.append({"issue": "色の使用", "severity": "中", "suggestion": "3色パレットに制限 (60-30-10ルール: 60% neutral, 30% primary, 10% accent)"})
-    if "文字" in design_description or "text" in desc_lower or "font" in desc_lower:
-        critique_points.append({"issue": "タイポグラフィ", "severity": "中", "suggestion": "フォントは2種類まで、ウェイトは3つまで。行間1.5-1.7、1行35-45文字。"})
-    if "ボタン" in design_description or "button" in desc_lower or "cta" in desc_lower:
-        critique_points.append({"issue": "CTA", "severity": "高", "suggestion": "主要CTAは1画面1つ。色で目立たせ、周囲に余白を。44px以上の高さ。"})
-    
-    # If no specific keywords, give general critique framework
-    if not critique_points:
-        critique_points = [
-            {"issue": "全体の印象", "severity": "要確認", "suggestion": "5秒テスト: 5秒見て何のサイトか、次に何をすべきか分かるか？"},
-            {"issue": "視線の流れ", "severity": "要確認", "suggestion": "Fパターン/Zパターンに沿っているか？重要→詳細の順に視線が流れるか？"},
-            {"issue": "余白", "severity": "中", "suggestion": "要素間に十分な余白があるか？詰め込みすぎていないか？8pt grid準拠か？"},
-        ]
-    
+    if matched_focus != "all":
+        focus_term = {
+            "hierarchy": "hierarchy",
+            "consistency": "consistency",
+            "proximity": "proximity",
+            "alignment": "alignment",
+            "contrast": "contrast",
+            "repetition": "repetition",
+            "whitespace": "white space",
+            "accessibility": "accessibility",
+        }[matched_focus]
+        heuristics = [item for item in heuristics if focus_term in item["principle"].casefold()]
+
+    description = design_description.casefold()
+    concern_rules = [
+        {
+            "issue": "Information density concern",
+            "triggers": ("ごちゃ", "詰め込み", "clutter", "busy", "overcrowded", "too many elements"),
+            "next_step": "Prioritize the key user task, then review which content can be grouped, deferred, or removed.",
+        },
+        {
+            "issue": "Text contrast concern",
+            "triggers": ("低コントラスト", "コントラストが低", "low contrast", "poor contrast", "hard to read"),
+            "next_step": "Measure the actual foreground/background pair at the applicable text-size threshold, then verify rendered states.",
+        },
+        {
+            "issue": "Typography readability concern",
+            "triggers": ("文字が小", "文字が読みにく", "small text", "tiny text", "font too small"),
+            "next_step": "Check zoom, line length, line height, and content hierarchy with representative users.",
+        },
+        {
+            "issue": "Primary action discoverability concern",
+            "triggers": ("ctaが目立たない", "cta not visible", "weak cta", "button is hard to find", "ボタンが見つからない"),
+            "next_step": "Test whether users can identify the primary action and understand its label without relying on color alone.",
+        },
+        {
+            "issue": "Color-palette complexity concern",
+            "triggers": ("色が多すぎ", "色が多い", "too many colors", "palette is too broad"),
+            "next_step": "Group colors by semantic role and remove only values that do not serve a clear purpose.",
+        },
+    ]
+    critique = []
+    for rule in concern_rules:
+        evidence = next((token for token in rule["triggers"] if token in description), None)
+        if evidence:
+            critique.append(
+                {
+                    "issue": rule["issue"],
+                    "evidence": evidence,
+                    "next_step": rule["next_step"],
+                    "confidence": "keyword_heuristic",
+                    "status": "review_requested_by_description",
+                }
+            )
+
     return {
         "design_description": design_description,
-        "focus": focus,
+        "focus": matched_focus,
+        "analysis_type": "keyword_heuristic",
         "heuristics": heuristics,
-        "critique": critique_points,
+        "critique": critique,
+        "review_prompts": {
+            "visual_hierarchy": "最重要の情報、主要タスク、次の行動が明確かを実画面で確認してください。",
+            "consistency": "同じ役割の要素が一貫し、例外が意図的かを確認してください。",
+            "accessibility": "コントラスト計算に加え、キーボードと支援技術でも確認してください。",
+        },
         "action_plan": {
-            "immediate": ["コントラストチェック", "余白を1.5倍に", "CTAを明確化"],
-            "short_term": ["8ptグリッド導入", "タイポグラフィ整理 (2フォント, 3ウェイト)", "色を3色に制限"],
-            "long_term": ["デザインシステム構築", "コンポーネント化", "ユーザーテスト"]
+            "immediate": ["説明に現れた懸念を、画面・実データ・利用者で確認する"],
+            "short_term": ["確認できた課題だけを優先し、デザインシステムやテストに反映する"],
+            "long_term": ["代表的な利用者と支援技術を含むユーザーテストを行う"],
         },
-        "scores": {
-            "visual_hierarchy": "要レビュー - 最重要要素が最も目立つか？",
-            "consistency": "要レビュー - 同じ要素は同じ見た目か？",
-            "accessibility": "要レビュー - WCAG AA準拠か？",
-        },
+        "limitations": [
+            "テキスト説明だけをキーワードで確認し、画像・DOM・実際の画面は解析しません。",
+            "懸念語が見つからなくても、デザイン品質やアクセシビリティの保証にはなりません。",
+            "余白・角丸・色数などの好みは普遍的な品質基準として扱いません。",
+        ],
         "resources": [
             "Refactoring UI - Adam Wathan & Steve Schoger",
             "Laws of UX - Jon Yablonski",
             "Gestalt Principles",
-            "Material Design 3 / Human Interface Guidelines"
-        ]
+            "Material Design 3 / Human Interface Guidelines",
+        ],
     }
 
 def tool_suggest_component_variants(component: str, style: str = "modern", count: int = 3) -> Dict[str, Any]:
-    component = component.lower()
+    if not isinstance(component, str) or not component.strip():
+        return {"error": "component must not be empty"}
+    if not isinstance(count, int) or isinstance(count, bool) or not 1 <= count <= 5:
+        return {"error": "count must be an integer between 1 and 5"}
+    if not isinstance(style, str) or style.lower() not in {"modern", "playful", "elegant", "minimal"}:
+        return {"error": "style must be modern, playful, elegant, or minimal"}
+    component = component.lower().strip()
+    style = style.lower()
     
     components = {
         "button": {

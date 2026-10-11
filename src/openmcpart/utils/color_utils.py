@@ -2,21 +2,24 @@
 Color utilities for design MCP server.
 """
 import colorsys
-import math
 import re
-from typing import Tuple, List, Dict
+from typing import Dict, List, Tuple
 
 
 def hex_to_rgb(hex_color: str) -> Tuple[int, int, int]:
-    hex_color = hex_color.strip().lstrip('#')
-    if len(hex_color) == 3:
-        hex_color = ''.join([c*2 for c in hex_color])
-    if len(hex_color) != 6:
+    if not isinstance(hex_color, str):
+        raise ValueError("Color must be a hex string")
+    value = hex_color.strip()
+    if value.startswith("#"):
+        value = value[1:]
+    if not re.fullmatch(r"(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})", value):
         raise ValueError(f"Invalid hex color: {hex_color}")
+    if len(value) == 3:
+        value = "".join(character * 2 for character in value)
     return (
-        int(hex_color[0:2], 16),
-        int(hex_color[2:4], 16),
-        int(hex_color[4:6], 16),
+        int(value[0:2], 16),
+        int(value[2:4], 16),
+        int(value[4:6], 16),
     )
 
 def rgb_to_hex(r: int, g: int, b: int) -> str:

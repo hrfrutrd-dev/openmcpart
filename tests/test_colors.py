@@ -1,6 +1,5 @@
 from openmcpart.utils.color_utils import (
     hex_to_rgb,
-    rgb_to_hex,
     contrast_ratio,
     wcag_level,
     generate_harmony,

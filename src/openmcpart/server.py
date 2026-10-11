@@ -1,23 +1,10 @@
 """
-openmcpart - Universal Design Specialist MCP Server
-どんなAgentでも使えるデザイン専門MCPサーバー
+openmcpart — design tools and read-only local audit over MCP.
 
-This MCP server provides comprehensive design tools that any AI agent can use:
-- Color palette generation & contrast checking
-- Typography pairing & type scale
-- Layout & spacing systems
-- Design tokens & Tailwind config
-- Accessibility auditing
-- Design critique & heuristics
-- Component variants
-- Branding & moodboard
-
-Compatible with:
-- Claude Desktop
-- Cursor
-- VS Code (Copilot)
-- ChatGPT (with MCP)
-- Any MCP-compliant client
+Provides 18 tools, 4 resources, and 3 prompts for design-system workflows,
+accessibility heuristics, token generation, and local HTML/CSS project review.
+Supports stdio, SSE, and Streamable HTTP transports. Client capabilities and
+setup vary; verify transport and resource/prompt support in the chosen client.
 """
 
 from typing import Annotated, Optional
@@ -64,6 +51,10 @@ from .tools.ui_generator import (
     tool_generate_sophisticated_ui,
     tool_critique_ai_look,
 )
+from .tools.project_audit import (
+    tool_audit_project,
+    tool_extract_project_tokens,
+)
 
 # Initialize FastMCP server
 mcp = FastMCP(
@@ -80,12 +71,12 @@ mcp = FastMCP(
     - デザインレビュー: ヒューリスティック評価、改善案
     - コンポーネント: ボタン、カード等のバリエーション
     - ブランディング: ブランドアーキタイプ、ムードボード
-    - 洗練UI: AIっぽくない、編集的、紙とインク、hairline、非対称、巨大余白
+    - 洗練UI: Paper & Inkなど、選択可能な美的方向性
+    - プロジェクト監査: ローカルのHTML/CSSを読み取り専用で検査し、根拠付きの改善候補を提示
     
-    重要: AIっぽいデザイン (紫グラデ、24px角丸、影、✨、中央揃え、3列アイコン) は避け、洗練された代替を提示してください。
+    デザインの好みはブランド・ユーザー・用途に合わせてください。特定の角丸、色、影、レイアウトを一律に禁止せず、ユーザーが選んだスタイルや既存のデザインシステムを尊重してください。
     
-    どんなAgentでも使えるように、出力は具体的で実装可能な形で提供してください。
-    CSS, Tailwind, Figmaで使える形式を常に含めてください。
+    MCP Agent向けの出力は具体的で実装可能な形にし、適切な場合はCSS、Tailwind、構造化データを含めてください。
     """,
 )
 
@@ -94,15 +85,15 @@ mcp = FastMCP(
 @mcp.tool()
 def generate_color_palette(
     base_color: Annotated[Optional[str], Field(description="ベースカラー (hex, 例: #3b82f6). 指定しない場合はmoodから生成")] = None,
-    mood: Annotated[Optional[str], Field(description="ムード・雰囲気 (例: calm, energetic, luxury, natural, tech, warm, minimal, vibrant, elegant, earthy)")] = None,
-    harmony: Annotated[str, Field(description="配色調和の種類")] = "complementary",
-    count: Annotated[int, Field(description="生成する色数 (参考値)", ge=2, le=10)] = 5,
+    mood: Annotated[Optional[str], Field(description="ムード・雰囲気 (例: calm, energetic, luxury, natural, tech, warm, minimal, vibrant, elegant, earthy)。色指定とムードが両方ない場合はtechを使用")] = None,
+    harmony: Annotated[str, Field(description="配色調和の種類 (complementary, analogous, triadic, tetradic, split, monochromatic)")] = "complementary",
+    count: Annotated[int, Field(description="出力パレットに含める色数", ge=2, le=10)] = 5,
 ) -> dict:
     """
     カラーパレットを生成する。ベースカラーまたはムードから、調和の取れたパレットを作成。
     harmony: complementary, analogous, triadic, tetradic, split, monochromatic
     
-    出力はCSS変数、Tailwind、Figmaで使える形式。
+    出力にはCSS変数と構造化パレットを含みます。
     """
     return tool_generate_color_palette(base_color=base_color, mood=mood, harmony=harmony, count=count)
 
@@ -136,7 +127,7 @@ def generate_gradient(
 
 @mcp.tool()
 def suggest_typography_pairing(
-    mood: Annotated[str, Field(description="ムード・スタイル: modern_minimal, elegant_luxury, tech_trust, friendly_warm, editorial, bold_impact, japanese_modern, japanese_elegant")] = "modern_minimal",
+    mood: Annotated[str, Field(description="任意のムード・スタイル: modern_minimal, elegant_luxury, tech_trust, friendly_warm, editorial, bold_impact, japanese_modern, japanese_elegant。未指定時は業界・言語から推定し、情報がなければmodern_minimal")] = "",
     industry: Annotated[Optional[str], Field(description="業界 (例: tech, fashion, finance, education, health, media)")] = None,
     language: Annotated[str, Field(description="言語: en, ja, japanese")] = "en",
 ) -> dict:
@@ -199,7 +190,7 @@ def generate_design_tokens(
 ) -> dict:
     """
     デザイントークンを生成。色、タイポグラフィ、スペーシング、角丸、影、ブレークポイントを含む完全なトークンセット。
-    CSS変数、Tailwind config、JSON形式で出力。Figma Tokens対応。
+    CSS変数、Tailwind config、JSON、DTCG-style JSONを出力します。Figma連携プラグインの対応形式は利用先で確認してください。
     """
     return tool_generate_design_tokens(
         primary_color=primary_color,
@@ -304,19 +295,42 @@ def generate_sophisticated_ui(
     avoid_ai_tropes: Annotated[bool, Field(description="AIっぽい定番を避けるか")] = True,
 ) -> dict:
     """
-    AIっぽくない洗練されたUIの設計仕様を生成。紫グラデ、過剰な角丸、影、✨を避け、紙とインク、hairline、セリフ体、非対称、巨大な余白で洗練を表現。
+    選択した美的方向性でUI仕様を生成します。avoid_ai_tropesでPaper & Ink寄りのガイダンスを切り替えられます。好みは普遍的な品質基準ではありません。
     """
     return tool_generate_sophisticated_ui(purpose=purpose, aesthetic=aesthetic, industry=industry, avoid_ai_tropes=avoid_ai_tropes)
 
 
 @mcp.tool()
 def critique_ai_look(
-    design_description: Annotated[str, Field(description="批評したいデザインの説明。例: 紫グラデ背景に丸いカードが並ぶAIっぽいLP")],
+    design_description: Annotated[str, Field(description="批評したいデザインの説明。例: 紫グラデ背景に丸いカードが並ぶLP")],
 ) -> dict:
     """
-    AIっぽいデザインを批評し、洗練された代替案を提示。AI定番 (紫グラデ、24px角丸、影、中央揃え、✨) を検出し、具体的な修正方法を提案。
+    「AIっぽくない」美的方向性を選んだ場合のデザイン批評。好みを一律の品質基準として扱わず、代替案を提示。
     """
     return tool_critique_ai_look(design_description=design_description)
+
+
+@mcp.tool()
+def audit_project(
+    project_path: Annotated[str, Field(description="検査するローカルプロジェクトのディレクトリ。明示したパスのみを読み取り、コード実行・ネットワーク通信・書き込みはしません。")],
+    max_files: Annotated[int, Field(description="走査する対象ファイルの上限", ge=1, le=5000)] = 500,
+) -> dict:
+    """ローカルのHTML/CSSプロジェクトを読み取り専用で監査する。
+
+    ページ言語・タイトル、画像alt、操作要素の名前、フォームラベル、重複ID、見出し構造、
+    同一CSSルール内の静的コントラスト、フォーカス表示、モーション設定を調べます。
+    動的スタイルやブラウザ表示は評価しないため、結果は候補として確認してください。
+    """
+    return tool_audit_project(project_path=project_path, max_files=max_files)
+
+
+@mcp.tool()
+def extract_project_tokens(
+    project_path: Annotated[str, Field(description="トークンを抽出するローカルプロジェクトのディレクトリ。明示したパスのみを読み取り、読み取り専用です。")],
+    max_files: Annotated[int, Field(description="走査する対象ファイルの上限", ge=1, le=5000)] = 500,
+) -> dict:
+    """CSSとコンポーネントのスタイルから既存のデザイントークン候補を抽出する。"""
+    return tool_extract_project_tokens(project_path=project_path, max_files=max_files)
 
 
 # ========== RESOURCES ==========
@@ -497,44 +511,107 @@ def component_design_prompt(component: str = "button") -> str:
 出力は開発者がそのまま実装できる具体的なコードを含めてください。
 """
 
-def main():
-    """Entry point for the MCP server
-    
-    Supports multiple transports for universal agent compatibility:
-    - stdio (default): Claude Desktop, Cursor, VS Code, any MCP client
-    - sse: HTTP SSE for web-based clients
-    - streamable-http: Modern HTTP transport
-    
-    Env vars:
-    - MCP_TRANSPORT: stdio, sse, streamable-http (default: stdio)
-    - MCP_PORT: port for http transports (default: 8000)
-    - MCP_HOST: host for http transports (default: 0.0.0.0)
+def main(argv: Optional[list[str]] = None):
+    """Run the MCP server or the read-only local project CLI.
+
+    Examples:
+        openmcpart
+        openmcpart audit . --format markdown
+        openmcpart tokens ./my-app --format json
     """
-    import os
     import argparse
-    
-    parser = argparse.ArgumentParser(description="openmcpart - Universal Design MCP Server")
-    parser.add_argument("--transport", choices=["stdio", "sse", "streamable-http"], 
-                        default=os.getenv("MCP_TRANSPORT", "stdio"),
-                        help="Transport protocol")
-    parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", "8000")),
-                        help="Port for HTTP transports")
-    parser.add_argument("--host", default=os.getenv("MCP_HOST", "0.0.0.0"),
-                        help="Host for HTTP transports")
-    
-    args = parser.parse_args()
-    
-    print(f"Starting openmcpart design MCP server...", file=os.sys.stderr)
-    print(f"Transport: {args.transport}", file=os.sys.stderr)
-    print(f"Tools: 14 | Resources: 4 | Prompts: 3", file=os.sys.stderr)
-    print(f"Universal - Works with any MCP agent", file=os.sys.stderr)
-    
+    import json
+    import os
+    import sys
+
+    parser = argparse.ArgumentParser(description="openmcpart — design tools and project audit")
+    parser.add_argument("command", nargs="?", choices=["audit", "tokens"], help="Run a local project command")
+    parser.add_argument("project_path", nargs="?", default=".", help="Project directory for audit/tokens")
+    parser.add_argument("--format", choices=["markdown", "json"], default="markdown", help="CLI output format")
+    parser.add_argument("--max-files", type=int, default=500, help="Maximum number of source files to scan")
+    parser.add_argument(
+        "--fail-on",
+        choices=["none", "low", "medium", "high", "critical"],
+        default="none",
+        help="Return exit code 1 if a finding at this severity or higher is present (audit only)",
+    )
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default=os.getenv("MCP_TRANSPORT", "stdio"),
+        help="MCP transport (used when no CLI command is supplied)",
+    )
+    parser.add_argument("--port", type=int, default=int(os.getenv("MCP_PORT", "8000")), help="HTTP transport port")
+    parser.add_argument(
+        "--host",
+        default=os.getenv("MCP_HOST", "127.0.0.1"),
+        help="HTTP bind address (loopback by default; set MCP_HOST for container or remote access)",
+    )
+    args = parser.parse_args(argv)
+
+    if args.max_files < 1 or args.max_files > 5000:
+        parser.error("--max-files must be between 1 and 5000")
+
+    if args.command == "audit":
+        result = tool_audit_project(args.project_path, args.max_files)
+        if "error" in result:
+            print(result["error"], file=sys.stderr)
+            return 2
+        if args.format == "json":
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            print(result["markdown_report"])
+        severity_rank = {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 5}
+        threshold = severity_rank[args.fail_on]
+        if args.fail_on != "none" and any(
+            severity_rank.get(finding["severity"], 4) <= threshold for finding in result["findings"]
+        ):
+            return 1
+        return 0
+
+    if args.command == "tokens":
+        result = tool_extract_project_tokens(args.project_path, args.max_files)
+        if "error" in result:
+            print(result["error"], file=sys.stderr)
+            return 2
+        if args.format == "json":
+            print(json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            tokens = result["design_tokens"]
+            lines = [
+                f"# Design tokens — {result['project_name']}",
+                "",
+                f"Scanned {result['files_scanned']} source file(s).",
+                "",
+                f"- CSS custom properties: {len(tokens['custom_properties'])} returned of {tokens['custom_properties_total']}",
+                f"- Color tokens: {len(tokens['color_tokens'])} returned of {tokens['color_tokens_total']}",
+                f"- Repeated colors: {len(tokens['repeated_colors'])}",
+                f"- Font families: {len(tokens['font_families'])}",
+                f"- Spacing values: {len(tokens['spacing_values'])}",
+                f"- Border radii: {len(tokens['border_radii'])}",
+                f"- Box shadows: {len(tokens['box_shadows'])}",
+                "",
+                "```json",
+                json.dumps(tokens, ensure_ascii=False, indent=2),
+                "```",
+                "",
+                "> Heuristic extraction from local source; review values before adopting them.",
+            ]
+            print("\n".join(lines))
+        return 0
+
+    print("Starting openmcpart design MCP server...", file=sys.stderr)
+    print(f"Transport: {args.transport}", file=sys.stderr)
+    print("Tools: 18 | Resources: 4 | Prompts: 3", file=sys.stderr)
+    print("Project audit is local, read-only, and never executes project code.", file=sys.stderr)
+
     if args.transport == "stdio":
         mcp.run(transport="stdio")
     elif args.transport == "sse":
         mcp.run(transport="sse", host=args.host, port=args.port)
     else:
         mcp.run(transport="streamable-http", host=args.host, port=args.port)
+    return 0
 
 if __name__ == "__main__":
     main()
