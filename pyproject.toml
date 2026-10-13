@@ -1,11 +1,12 @@
 [project]
 name = "openmcpart"
-version = "0.3.0"
 description = "Design tools and read-only local project audit over MCP"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["mcp", "design", "ui", "ux", "design-system", "color", "typography", "accessibility"]
+dynamic = ["version"]
 authors = [{ name = "openmcpart", email = "hello@openmcpart.dev" }]
 dependencies = [
     "mcp>=1.20.0",
@@ -14,12 +15,14 @@ dependencies = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: User Interfaces",
 ]
 
 [project.optional-dependencies]
@@ -43,6 +46,23 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openmcpart"]
+
+[tool.hatch.version]
+path = "src/openmcpart/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/docs",
+    "/examples",
+    "/web",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/action.yml",
+    "/Dockerfile",
+]
 
 [tool.ruff]
 line-length = 100

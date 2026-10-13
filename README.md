@@ -1,10 +1,11 @@
 # openmcpart — Design Tools & Local Audit MCP Server
 ### MCP対応Agentで使うデザイン支援サーバー — スタイル提案とローカル静的監査
 
+[![PyPI](https://img.shields.io/badge/PyPI-openmcpart-3775A9)](https://pypi.org/project/openmcpart/)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)](https://www.python.org)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-[![Paper & Ink](https://img.shields.io/badge/UI-Optional%20Paper%20%26%20Ink-black)](./web/)
+[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/hrfrutrd-dev/openmcpart/blob/main/LICENSE)
+[![Paper & Ink](https://img.shields.io/badge/UI-Optional%20Paper%20%26%20Ink-black)](https://github.com/hrfrutrd-dev/openmcpart/tree/main/web)
 
 **Claude Desktop、Cursor、VS CodeなどのMCP対応クライアントで利用できるデザイン支援サーバー**
 
@@ -302,7 +303,7 @@ MCP_TRANSPORT=stdio openmcpart
 
 ## 🏗️ アーキテクチャ
 
-現在は **18 tools / 4 resources / 3 prompts**。構成・Transport・監査の制約は[Architecture](./docs/ARCHITECTURE.md)を参照してください。
+現在は **18 tools / 4 resources / 3 prompts**。構成・Transport・監査の制約は[Architecture](https://github.com/hrfrutrd-dev/openmcpart/blob/main/docs/ARCHITECTURE.md)を参照してください。
 
 - stdioを標準Transportとして使用。SSE／streamable HTTPも実装
 - ランタイム依存はMCP SDKとPydantic。監査ロジックは標準ライブラリ
@@ -328,15 +329,17 @@ npx @modelcontextprotocol/inspector openmcpart
 ```
 
 GitHub ActionsではPython 3.10–3.13のテスト、Lint、CLI smoke testを実行します。
+GitHub Releaseを公開すると `.github/workflows/publish.yml` がPyPIへ配布します(Trusted Publishing、トークン不要)。手順は [docs/PUBLISHING_JA.md](https://github.com/hrfrutrd-dev/openmcpart/blob/main/docs/PUBLISHING_JA.md) を参照してください。
 
 ---
 
 ## 📖 ドキュメント
 
 - [MCP公式ドキュメント](https://modelcontextprotocol.io)
-- [examples/](./examples) - 設定例と使用例
-- [docs/USAGE_JA.md](./docs/USAGE_JA.md) - MCP設定・CLI利用ガイド
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - 構成・監査の範囲・安全性
+- [examples/](https://github.com/hrfrutrd-dev/openmcpart/tree/main/examples) - 設定例と使用例
+- [docs/USAGE_JA.md](https://github.com/hrfrutrd-dev/openmcpart/blob/main/docs/USAGE_JA.md) - MCP設定・CLI利用ガイド
+- [docs/ARCHITECTURE.md](https://github.com/hrfrutrd-dev/openmcpart/blob/main/docs/ARCHITECTURE.md) - 構成・監査の範囲・安全性
+- [docs/PUBLISHING_JA.md](https://github.com/hrfrutrd-dev/openmcpart/blob/main/docs/PUBLISHING_JA.md) - PyPI公開手順(Trusted Publishing / 手動アップロード)
 
 ---
 
@@ -352,7 +355,7 @@ GitHub ActionsではPython 3.10–3.13のテスト、Lint、CLI smoke testを実
 
 ## 📄 ライセンス
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照
+MIT License - 詳細は [LICENSE](https://github.com/hrfrutrd-dev/openmcpart/blob/main/LICENSE) を参照
 
 ---
 
